@@ -40,8 +40,11 @@ class _LoginPageState extends State<LoginPage> {
               children: <Widget>[
                 Image.asset(
                   'asset/img/logo.png',
-                  scale: 3,
+                  scale: 4,
                 ),
+                SizedBox(
+                height: 20,
+              ),
                 TextField(
                     controller: _emcontroller,
                     keyboardType: TextInputType.emailAddress,
