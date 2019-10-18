@@ -1,6 +1,6 @@
 # my_pickup
 
-A new Flutter project.
+Lab 2 Flutter project.
 
 ## Getting Started
 
