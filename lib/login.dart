@@ -48,14 +48,16 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                     controller: _emcontroller,
                     keyboardType: TextInputType.emailAddress,
+                    style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                        labelText: 'Email',
+                        labelText: 'Email',                    
                         icon: Icon(Icons.email, color: Colors.white),
                         labelStyle: TextStyle(color: Colors.white),
                         enabledBorder: new UnderlineInputBorder(
                             borderSide: new BorderSide(color: Colors.white)))),
                 TextField(
                   controller: _passcontroller,
+                  style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                       labelText: 'Password',
                       icon: Icon(Icons.lock, color: Colors.white),
