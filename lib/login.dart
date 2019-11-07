@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_pickup/register.dart';
 import 'package:toast/toast.dart';
 
+import 'theme.dart' as Theme;
+
+String logo = 'asset/img/logo.png';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: new ThemeData(scaffoldBackgroundColor: const Color(0x3b3b3b)),
       home: LoginPage(),
     );
   }
@@ -31,7 +34,6 @@ class _LoginPageState extends State<LoginPage> {
     return WillPopScope(
         onWillPop: _onBackPressAppBar,
         child: Scaffold(
-          backgroundColor: Color.fromRGBO(40, 40, 40, 1),
           resizeToAvoidBottomPadding: false,
           body: new Container(
             padding: EdgeInsets.all(30.0),
@@ -39,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Image.asset(
-                  'asset/img/logo.png',
+                  logo,
                   scale: 4,
                 ),
                 SizedBox(
@@ -48,26 +50,20 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                     controller: _emcontroller,
                     keyboardType: TextInputType.emailAddress,
-                    style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                         labelText: 'Email',                    
-                        icon: Icon(Icons.email, color: Colors.white),
-                        labelStyle: TextStyle(color: Colors.white),
-                        enabledBorder: new UnderlineInputBorder(
-                            borderSide: new BorderSide(color: Colors.white)))),
+                        icon: Icon(Icons.email),
+                        )),
                 TextField(
                   controller: _passcontroller,
-                  style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                       labelText: 'Password',
-                      icon: Icon(Icons.lock, color: Colors.white),
-                      labelStyle: TextStyle(color: Colors.white),
-                      enabledBorder: new UnderlineInputBorder(
-                          borderSide: new BorderSide(color: Colors.white))),
+                      icon: Icon(Icons.lock),
+                      ),
                   obscureText: true,
                 ),
                 SizedBox(
-                  height: 10,
+                  height: 20,
                 ),
                 MaterialButton(
                   shape: RoundedRectangleBorder(
@@ -76,10 +72,9 @@ class _LoginPageState extends State<LoginPage> {
                   height: 50,
                   child: Text(
                     'Login',
-                    style: new TextStyle(fontSize: 20.0),
+                    style: new TextStyle(fontSize: 20.0, color: Theme.appThemeData.primaryColorDark),
                   ),
-                  color: Color.fromRGBO(255, 140, 0, 1),
-                  textColor: Colors.black,
+                  color: Theme.appThemeData.primaryColor,
                   elevation: 15,
                   onPressed: _onLogin,
                 ),
@@ -88,20 +83,16 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 Row(
                   children: <Widget>[
-                    Theme(
-                        data: Theme.of(context).copyWith(
-                          unselectedWidgetColor: Colors.white,
-                        ),
-                        child: Checkbox(
-                          checkColor: Colors.black,
-                          activeColor: Color.fromRGBO(255, 140, 0, 1),                            
+                    Checkbox(
+                          checkColor: Theme.appThemeData.primaryColorDark,
+                          activeColor: Theme.appThemeData.primaryColor,                            
                           value: _isChecked,
                           onChanged: (bool value) {
                             _onChange(value);
                           },
-                        )),
+                        ),
                     Text('Remember Me',
-                        style: TextStyle(fontSize: 16, color: Colors.white))
+                        style: TextStyle(fontSize: 16))
                   ],
                 ),
                 SizedBox(
@@ -110,14 +101,14 @@ class _LoginPageState extends State<LoginPage> {
                 GestureDetector(
                     onTap: _onRegister,
                     child: Text('Register New Account',
-                        style: TextStyle(fontSize: 16, color: Colors.white))),
+                        style: TextStyle(fontSize: 16))),
                 SizedBox(
                   height: 25,
                 ),
                 GestureDetector(
                     onTap: _onForgot,
                     child:
-                        Text('Forgot Account', style: TextStyle(fontSize: 16, color: Colors.white))),
+                        Text('Forgot Account', style: TextStyle(fontSize: 16))),
               ],
             ),
           ),
@@ -127,17 +118,12 @@ class _LoginPageState extends State<LoginPage> {
   void _onLogin() {
     _email = _emcontroller.text;
     _password = _passcontroller.text;
-    Toast.show("The button is working", context,
-        duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     //TODO handle login button
   }
 
   void _onRegister() {
     print('onRegister');
-    //Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
-    //TODO handle register button
-    Toast.show("The button is working", context,
-        duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
   }
 
   void _onForgot() {
