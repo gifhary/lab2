@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:progress_dialog/progress_dialog.dart';
 import 'login.dart';
 
-import 'theme.dart' as Theme;
+import 'theme/theme.dart' as Theme;
 
 String profilePath = 'asset/img/profile.png';
 String urlUpload = ''; //"http://slumberjer.com/myhelper/php/register_user.php";
@@ -70,8 +70,8 @@ class RegisterWidgetState extends State<RegisterWidget> {
     return Column(
       children: <Widget>[
         SizedBox(
-                height: 20,
-              ),
+          height: 20,
+        ),
         GestureDetector(
             onTap: () => mainBottomSheet(context),
             child: Container(
@@ -86,7 +86,9 @@ class RegisterWidgetState extends State<RegisterWidget> {
                     fit: BoxFit.fill,
                   )),
             )),
-        Text('Tap image to set profile picture',
+        Text(_image == null
+        ? 'Tap image to set profile picture'
+        : '',
             style: new TextStyle(fontSize: 16.0)),
         TextField(
             controller: _emcontroller,
@@ -126,8 +128,9 @@ class RegisterWidgetState extends State<RegisterWidget> {
           minWidth: 300,
           height: 50,
           child: Text('Register',
-          style: new TextStyle(fontSize: 20.0, color: Theme.appThemeData.primaryColorDark)),
-          color: Theme.appThemeData.primaryColor,
+              style: new TextStyle(
+                  fontSize: 20.0, color: Theme.darkThemeData.primaryColorDark)),
+          color: Theme.darkThemeData.primaryColor,
           elevation: 15,
           onPressed: _onRegister,
         ),
@@ -138,6 +141,7 @@ class RegisterWidgetState extends State<RegisterWidget> {
     );
   }
 
+//bottom sheet menu for taking profile picture
   void mainBottomSheet(BuildContext context) {
     showModalBottomSheet(
         context: context,
@@ -164,18 +168,27 @@ class RegisterWidgetState extends State<RegisterWidget> {
     );
   }
 
+  //Take profile picture from camera
   _action1() async {
     print('action camera');
-    _image = await ImagePicker.pickImage(source: ImageSource.camera);
-    setState(() {});
+    File _cameraImage;
+
+    _cameraImage = await ImagePicker.pickImage(source: ImageSource.camera);
+    if (_cameraImage != null) {
+      //Avoid crash if user cancel picking image
+      _image = _cameraImage;
+      setState(() {});
+    }
   }
 
+  //Take profile picture from gallery
   _action2() async {
     print('action gallery');
     File _galleryImage;
 
     _galleryImage = await ImagePicker.pickImage(source: ImageSource.gallery);
     if (_galleryImage != null) {
+      //Avoid crash if user cancel picking image
       _image = _galleryImage;
       setState(() {});
     }
@@ -193,7 +206,7 @@ class RegisterWidgetState extends State<RegisterWidget> {
     _password = _passcontroller.text;
     _phone = _phcontroller.text;
 
-    if(_image == null){
+    if (_image == null) {
       _image = new File(profilePath);
       print("Test here " + _image.toString());
     }
@@ -201,7 +214,7 @@ class RegisterWidgetState extends State<RegisterWidget> {
     if ((_isEmailValid(_email)) && (_image != null) && (_phone.length > 5)) {
       if (_password.length > 5) {
         Toast.show("Registration in progress", context,
-          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
 
         ProgressDialog pr = new ProgressDialog(context,
             type: ProgressDialogType.Normal, isDismissible: false);
@@ -232,10 +245,9 @@ class RegisterWidgetState extends State<RegisterWidget> {
         }).catchError((err) {
           print(err);
         });
-
       } else {
         Toast.show("Password minimum is 6 characters", context,
-          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       }
     } else {
       Toast.show("Please complete all the field", context,

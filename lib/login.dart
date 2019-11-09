@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_pickup/register.dart';
 import 'package:toast/toast.dart';
+import 'package:dynamic_theme/dynamic_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'theme.dart' as Theme;
+import 'theme/theme.dart' as Theme;
 
 String logo = 'asset/img/logo.png';
 void main() => runApp(MyApp());
@@ -28,6 +30,16 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passcontroller = TextEditingController();
   String _password = "";
   bool _isChecked = false;
+  bool _isSwitched = false;
+
+  static const String _themePreferenceKey = 'isDark';
+
+  @override
+  void initState() {
+    loadpref();
+    print('Init: $_email');
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,24 +54,24 @@ class _LoginPageState extends State<LoginPage> {
               children: <Widget>[
                 Image.asset(
                   logo,
-                  scale: 4,
+                  scale: 5,
                 ),
                 SizedBox(
-                height: 20,
-              ),
+                  height: 10,
+                ),
                 TextField(
                     controller: _emcontroller,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                        labelText: 'Email',                    
-                        icon: Icon(Icons.email),
-                        )),
+                      labelText: 'Email',
+                      icon: Icon(Icons.email),
+                    )),
                 TextField(
                   controller: _passcontroller,
                   decoration: InputDecoration(
-                      labelText: 'Password',
-                      icon: Icon(Icons.lock),
-                      ),
+                    labelText: 'Password',
+                    icon: Icon(Icons.lock),
+                  ),
                   obscureText: true,
                 ),
                 SizedBox(
@@ -72,9 +84,11 @@ class _LoginPageState extends State<LoginPage> {
                   height: 50,
                   child: Text(
                     'Login',
-                    style: new TextStyle(fontSize: 20.0, color: Theme.appThemeData.primaryColorDark),
+                    style: new TextStyle(
+                        fontSize: 20.0,
+                        color: Theme.darkThemeData.primaryColorDark),
                   ),
-                  color: Theme.appThemeData.primaryColor,
+                  color: Theme.darkThemeData.primaryColor,
                   elevation: 15,
                   onPressed: _onLogin,
                 ),
@@ -83,16 +97,35 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 Row(
                   children: <Widget>[
+                    Icon(
+                      Icons.brightness_medium,
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text('Dark Theme', style: TextStyle(fontSize: 16)),
+                    SizedBox(
+                      width: 25,
+                    ),
+                    Switch(
+                      value: _isSwitched,
+                      onChanged: (bool value) {
+                        _onThemeChanged(value);
+                      },
+                    ),
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
                     Checkbox(
-                          checkColor: Theme.appThemeData.primaryColorDark,
-                          activeColor: Theme.appThemeData.primaryColor,                            
-                          value: _isChecked,
-                          onChanged: (bool value) {
-                            _onChange(value);
-                          },
-                        ),
-                    Text('Remember Me',
-                        style: TextStyle(fontSize: 16))
+                      checkColor: Theme.darkThemeData.primaryColorDark,
+                      activeColor: Theme.darkThemeData.primaryColor,
+                      value: _isChecked,
+                      onChanged: (bool value) {
+                        _onChange(value);
+                      },
+                    ),
+                    Text('Remember Me', style: TextStyle(fontSize: 16))
                   ],
                 ),
                 SizedBox(
@@ -115,6 +148,27 @@ class _LoginPageState extends State<LoginPage> {
         ));
   }
 
+  void loadpref() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (prefs.getBool(_themePreferenceKey) != null) {
+      _isSwitched = (prefs.getBool(_themePreferenceKey));
+      setState(() {});
+      print('ThemePrefs : DarkMode : ' +
+          prefs.getBool(_themePreferenceKey).toString());
+    }
+  }
+
+  void _onThemeChanged(bool value) {
+    if (value) {
+      DynamicTheme.of(context).setBrightness(Brightness.dark);
+      _isSwitched = true;
+    } else {
+      DynamicTheme.of(context).setBrightness(Brightness.light);
+      _isSwitched = false;
+    }
+  }
+
   void _onLogin() {
     _email = _emcontroller.text;
     _password = _passcontroller.text;
@@ -123,7 +177,8 @@ class _LoginPageState extends State<LoginPage> {
 
   void _onRegister() {
     print('onRegister');
-    Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => RegisterPage()));
   }
 
   void _onForgot() {
