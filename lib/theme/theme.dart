@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 ThemeData darkThemeData = new ThemeData(
   primaryColor: CompanyColors.orange[900],
   primaryColorDark: Colors.black,
+  accentColor: CompanyColors.orange[900],
+  toggleableActiveColor: CompanyColors.orange[900],
 );
 
 class CompanyColors {

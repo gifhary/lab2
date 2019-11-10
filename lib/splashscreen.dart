@@ -6,8 +6,6 @@ import 'login.dart';
 
 void main() => runApp(SplashScreen());
 
-//Brightness _brightness = Brightness.light;
-
 class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -15,6 +13,8 @@ class SplashScreen extends StatelessWidget {
         defaultBrightness: Brightness.light,
         data: (brightness) => new ThemeData(
               brightness: brightness,
+              accentColor: Theme.darkThemeData.accentColor,
+              toggleableActiveColor: Theme.darkThemeData.toggleableActiveColor
             ),
         themedWidgetBuilder: (context, theme) {
           return new MaterialApp(
@@ -83,7 +83,6 @@ class _ProgressIndicatorState extends State<ProgressIndicator>
     return new Center(
         child: new Container(
       width: 200,
-      color: Colors.teal,
       child: LinearProgressIndicator(
         value: animation.value,
         backgroundColor: Colors.black,

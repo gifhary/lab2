@@ -47,102 +47,104 @@ class _LoginPageState extends State<LoginPage> {
         onWillPop: _onBackPressAppBar,
         child: Scaffold(
           resizeToAvoidBottomPadding: false,
-          body: new Container(
-            padding: EdgeInsets.all(30.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Image.asset(
-                  logo,
-                  scale: 5,
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                TextField(
-                    controller: _emcontroller,
-                    keyboardType: TextInputType.emailAddress,
+          body: SingleChildScrollView(
+            child: new Container(
+              padding: EdgeInsets.all(30.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Image.asset(
+                    logo,
+                    scale: 5,
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  TextField(
+                      controller: _emcontroller,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        icon: Icon(Icons.email),
+                      )),
+                  TextField(
+                    controller: _passcontroller,
                     decoration: InputDecoration(
-                      labelText: 'Email',
-                      icon: Icon(Icons.email),
-                    )),
-                TextField(
-                  controller: _passcontroller,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    icon: Icon(Icons.lock),
+                      labelText: 'Password',
+                      icon: Icon(Icons.lock),
+                    ),
+                    obscureText: true,
                   ),
-                  obscureText: true,
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                MaterialButton(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5.0)),
-                  minWidth: 300,
-                  height: 50,
-                  child: Text(
-                    'Login',
-                    style: new TextStyle(
-                        fontSize: 20.0,
-                        color: Theme.darkThemeData.primaryColorDark),
+                  SizedBox(
+                    height: 20,
                   ),
-                  color: Theme.darkThemeData.primaryColor,
-                  elevation: 15,
-                  onPressed: _onLogin,
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.brightness_medium,
+                  MaterialButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0)),
+                    minWidth: 300,
+                    height: 50,
+                    child: Text(
+                      'Login',
+                      style: new TextStyle(
+                          fontSize: 20.0,
+                          color: Theme.darkThemeData.primaryColorDark),
                     ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text('Dark Theme', style: TextStyle(fontSize: 16)),
-                    SizedBox(
-                      width: 25,
-                    ),
-                    Switch(
-                      value: _isSwitched,
-                      onChanged: (bool value) {
-                        _onThemeChanged(value);
-                      },
-                    ),
-                  ],
-                ),
-                Row(
-                  children: <Widget>[
-                    Checkbox(
-                      checkColor: Theme.darkThemeData.primaryColorDark,
-                      activeColor: Theme.darkThemeData.primaryColor,
-                      value: _isChecked,
-                      onChanged: (bool value) {
-                        _onChange(value);
-                      },
-                    ),
-                    Text('Remember Me', style: TextStyle(fontSize: 16))
-                  ],
-                ),
-                SizedBox(
-                  height: 25,
-                ),
-                GestureDetector(
-                    onTap: _onRegister,
-                    child: Text('Register New Account',
-                        style: TextStyle(fontSize: 16))),
-                SizedBox(
-                  height: 25,
-                ),
-                GestureDetector(
-                    onTap: _onForgot,
-                    child:
-                        Text('Forgot Account', style: TextStyle(fontSize: 16))),
-              ],
+                    color: Theme.darkThemeData.primaryColor,
+                    elevation: 15,
+                    onPressed: _onLogin,
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.brightness_medium,
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text('Dark Theme', style: TextStyle(fontSize: 16)),
+                      SizedBox(
+                        width: 25,
+                      ),
+                      Switch(
+                        value: _isSwitched,
+                        onChanged: (bool value) {
+                          _onThemeChanged(value);
+                        },
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: <Widget>[
+                      Checkbox(
+                        checkColor: Theme.darkThemeData.primaryColorDark,
+                        activeColor: Theme.darkThemeData.primaryColor,
+                        value: _isChecked,
+                        onChanged: (bool value) {
+                          _onChange(value);
+                        },
+                      ),
+                      Text('Remember Me', style: TextStyle(fontSize: 16))
+                    ],
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  GestureDetector(
+                      onTap: _onRegister,
+                      child: Text('Register New Account',
+                          style: TextStyle(fontSize: 16))),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  GestureDetector(
+                      onTap: _onForgot,
+                      child: Text('Forgot Account',
+                          style: TextStyle(fontSize: 16))),
+                ],
+              ),
             ),
           ),
         ));
