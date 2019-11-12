@@ -8,11 +8,13 @@ import 'package:toast/toast.dart';
 import 'package:http/http.dart' as http;
 import 'package:progress_dialog/progress_dialog.dart';
 import 'login.dart';
+import 'home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'theme/theme.dart' as Theme;
 
 String profilePath = 'asset/img/profile.png';
-String urlUpload = ''; //"http://slumberjer.com/myhelper/php/register_user.php";
+String urlUpload = 'http://pickupandlaundry.com/my_pickup/gifhary/register.php';
 File _image;
 final TextEditingController _namecontroller = TextEditingController();
 final TextEditingController _emcontroller = TextEditingController();
@@ -86,9 +88,7 @@ class RegisterWidgetState extends State<RegisterWidget> {
                     fit: BoxFit.fill,
                   )),
             )),
-        Text(_image == null
-        ? 'Tap image to set profile picture'
-        : '',
+        Text(_image == null ? 'Tap image to set profile picture' : '',
             style: new TextStyle(fontSize: 16.0)),
         TextField(
             controller: _emcontroller,
@@ -198,6 +198,11 @@ class RegisterWidgetState extends State<RegisterWidget> {
     print('onRegister Button from RegisterUser()');
     print(_image.toString());
     uploadData();
+    //Saving profile img
+    saveProfileImg();
+
+    //saving register info into preferences and automaticly logged in
+    saveRegisterInfo(_email);
   }
 
   void uploadData() {
@@ -206,16 +211,8 @@ class RegisterWidgetState extends State<RegisterWidget> {
     _password = _passcontroller.text;
     _phone = _phcontroller.text;
 
-    if (_image == null) {
-      _image = new File(profilePath);
-      print("Test here " + _image.toString());
-    }
-
     if ((_isEmailValid(_email)) && (_image != null) && (_phone.length > 5)) {
       if (_password.length > 5) {
-        Toast.show("Registration in progress", context,
-            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-
         ProgressDialog pr = new ProgressDialog(context,
             type: ProgressDialogType.Normal, isDismissible: false);
         pr.style(message: "Registration in progress");
@@ -232,16 +229,23 @@ class RegisterWidgetState extends State<RegisterWidget> {
           print(res.statusCode);
           Toast.show(res.body, context,
               duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-          _image = null;
-          _namecontroller.text = '';
-          _emcontroller.text = '';
-          _phcontroller.text = '';
-          _passcontroller.text = '';
-          pr.dismiss();
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (BuildContext context) => LoginPage()));
+
+          if (res.body == "success") {
+            pr.dismiss();
+            _image = null;
+            _namecontroller.text = '';
+            _emcontroller.text = '';
+            _phcontroller.text = '';
+            _passcontroller.text = '';
+
+            //Move to home page after register
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (BuildContext context) => HomePage()));
+          } else {
+            pr.dismiss();
+          }
         }).catchError((err) {
           print(err);
         });
@@ -253,6 +257,15 @@ class RegisterWidgetState extends State<RegisterWidget> {
       Toast.show("Please complete all the field", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     }
+  }
+
+  void saveRegisterInfo(String email) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', email);
+  }
+
+  void saveProfileImg() {
+    //TODO safe profile image into local directory
   }
 
   bool _isEmailValid(String email) {

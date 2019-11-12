@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dynamic_theme/dynamic_theme.dart';
+import 'home.dart';
 import 'theme/theme.dart' as Theme;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'login.dart';
 
@@ -12,10 +14,9 @@ class SplashScreen extends StatelessWidget {
     return new DynamicTheme(
         defaultBrightness: Brightness.light,
         data: (brightness) => new ThemeData(
-              brightness: brightness,
-              accentColor: Theme.darkThemeData.accentColor,
-              toggleableActiveColor: Theme.darkThemeData.toggleableActiveColor
-            ),
+            brightness: brightness,
+            accentColor: Theme.darkThemeData.accentColor,
+            toggleableActiveColor: Theme.darkThemeData.toggleableActiveColor),
         themedWidgetBuilder: (context, theme) {
           return new MaterialApp(
             theme: theme,
@@ -61,15 +62,41 @@ class _ProgressIndicatorState extends State<ProgressIndicator>
       ..addListener(() {
         setState(() {
           if (animation.value > 0.99) {
-            //print('Sucess Login');
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (BuildContext context) => LoginPage()));
+
+            checkPref().then((onValue) {
+              print("logged in ? : " + onValue.toString());
+
+              if (onValue) {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (BuildContext context) => HomePage()));
+              } else {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (BuildContext context) => LoginPage()));
+              }
+            });
           }
         });
       });
     controller.repeat();
+  }
+
+  //if user is in preferences, automaticaly moved to home page
+  Future<bool> checkPref() async {
+    print('check preferences');
+    bool result = false;
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String savedEmail = prefs.getString('email');
+    if (savedEmail != null) {
+      print('saved email : ' + savedEmail);
+      
+      result = true;
+    }
+    return result;
   }
 
   @override

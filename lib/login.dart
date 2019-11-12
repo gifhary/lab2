@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_pickup/home.dart';
 import 'package:my_pickup/register.dart';
+import 'package:my_pickup/resetPassword.dart';
 import 'package:toast/toast.dart';
 import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:progress_dialog/progress_dialog.dart';
+import 'package:http/http.dart' as http;
 
 import 'theme/theme.dart' as Theme;
 
+String urlLogin = 'http://pickupandlaundry.com/my_pickup/gifhary/login.php';
+String urlSecurityCodeForResetPass = 'http://pickupandlaundry.com/my_pickup/gifhary/security_code.php';
 String logo = 'asset/img/logo.png';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -29,15 +36,14 @@ class _LoginPageState extends State<LoginPage> {
   String _email = "";
   final TextEditingController _passcontroller = TextEditingController();
   String _password = "";
-  bool _isChecked = false;
   bool _isSwitched = false;
 
   static const String _themePreferenceKey = 'isDark';
 
   @override
   void initState() {
-    loadpref();
     print('Init: $_email');
+    _loadThemePref();
     super.initState();
   }
 
@@ -116,19 +122,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ),
-                  Row(
-                    children: <Widget>[
-                      Checkbox(
-                        checkColor: Theme.darkThemeData.primaryColorDark,
-                        activeColor: Theme.darkThemeData.primaryColor,
-                        value: _isChecked,
-                        onChanged: (bool value) {
-                          _onChange(value);
-                        },
-                      ),
-                      Text('Remember Me', style: TextStyle(fontSize: 16))
-                    ],
-                  ),
                   SizedBox(
                     height: 25,
                   ),
@@ -150,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
         ));
   }
 
-  void loadpref() async {
+  void _loadThemePref() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     if (prefs.getBool(_themePreferenceKey) != null) {
@@ -174,7 +167,40 @@ class _LoginPageState extends State<LoginPage> {
   void _onLogin() {
     _email = _emcontroller.text;
     _password = _passcontroller.text;
-    //TODO handle login button
+
+    if (_isEmailValid(_email) && (_password.length > 4)) {
+      ProgressDialog pr = new ProgressDialog(context,
+          type: ProgressDialogType.Normal, isDismissible: false);
+      pr.style(message: "Login in");
+      pr.show();
+      http.post(urlLogin, body: {
+        "email": _email,
+        "password": _password,
+      }).then((res) {
+        print("status code : " + res.statusCode.toString());
+        Toast.show(res.body, context,
+            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        if (res.body == "success") {
+          pr.dismiss();
+
+          savePref(_email); //save login credential
+
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => HomePage()));
+        } else {
+          pr.dismiss();
+        }
+      }).catchError((err) {
+        pr.dismiss();
+        print(err);
+      });
+    } else {}
+  }
+
+  void savePref(String email) async {
+    print('saving preferences');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', email);
   }
 
   void _onRegister() {
@@ -184,21 +210,64 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _onForgot() {
-    //TODO handle forgot account button
-    Toast.show("The button is working", context,
-        duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    _email = _emcontroller.text;
+
+    if (_isEmailValid(_email)) {
+      ProgressDialog pr = new ProgressDialog(context,
+          type: ProgressDialogType.Normal, isDismissible: false);
+      pr.style(message: "Sending Email");
+      pr.show();
+      http.post(urlSecurityCodeForResetPass, body: {
+        "email": _email,
+        "password": _password,
+      }).then((res) {
+        print("secure code : " + res.body);
+        if (res.body == "error") {
+          pr.dismiss();
+
+          Toast.show('error', context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        } else {
+          pr.dismiss();
+          
+          _saveEmailForPassReset(_email);
+          _saveSecureCode(res.body); //save secure code for password reset
+
+          Toast.show('Security code sent to your email', context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => ResetPassword()));
+        }
+      }).catchError((err) {
+        pr.dismiss();
+        print(err);
+      });
+    } else {
+      Toast.show('Invalid Email', context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    }
   }
 
-  void _onChange(bool value) {
-    setState(() {
-      _isChecked = value;
-      //TODO handle remember me check box
-    });
+  void _saveEmailForPassReset(String email) async{
+    print('saving preferences');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('resetPassEmail', email);
   }
-}
 
-Future<bool> _onBackPressAppBar() async {
-  SystemNavigator.pop();
-  print('Backpress');
-  return Future.value(false);
+  void _saveSecureCode(String code) async {
+    print('saving preferences');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('secureCode', code);
+  }
+
+  bool _isEmailValid(String email) {
+    return RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(email);
+  }
+
+  Future<bool> _onBackPressAppBar() async {
+    SystemNavigator.pop();
+    print('Backpress');
+    return Future.value(false);
+  }
 }
