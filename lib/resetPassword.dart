@@ -28,6 +28,8 @@ class ResetPassword extends StatefulWidget {
 }
 
 class _HomePageState extends State<ResetPassword> {
+  static const String _themePreferenceKey = 'isDark';
+
   @override
   void initState() {
     _loadResetEmail();
@@ -104,15 +106,14 @@ class _HomePageState extends State<ResetPassword> {
                   height: 30,
                 ),
                 TextField(
-                  enabled: _isCodeMatch,
-                  controller: _newPasswordController,
-                  keyboardType: TextInputType.text,
-                  decoration: InputDecoration(
-                    labelText: 'New Password',
-                    icon: Icon(Icons.lock),
-                  ),
-                  obscureText: true
-                ),
+                    enabled: _isCodeMatch,
+                    controller: _newPasswordController,
+                    keyboardType: TextInputType.text,
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      icon: Icon(Icons.lock),
+                    ),
+                    obscureText: true),
                 TextField(
                   enabled: _isCodeMatch,
                   controller: _newPasswordController2,
@@ -164,17 +165,25 @@ class _HomePageState extends State<ResetPassword> {
       if (_newPassword == _newPassword2) {
         ProgressDialog pr = new ProgressDialog(context,
             type: ProgressDialogType.Normal, isDismissible: false);
+
+        print(_newPassword);
+
         pr.style(message: "Updating Password");
         pr.show();
         http.post(urlResetPass, body: {
           "email": _email,
-          "password": _newPassword,
+          "newPassword": _newPassword,
         }).then((res) {
           print("Password update : " + res.body);
           Toast.show(res.body, context,
               duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
           if (res.body == "success") {
             pr.dismiss();
+            _securityCodeController.text = "";
+            _newPasswordController.text = "";
+            _newPasswordController2.text = "";
+            
+            _removePrefsExceptTheme();
 
             Navigator.push(
                 context, MaterialPageRoute(builder: (context) => LoginPage()));
@@ -195,10 +204,16 @@ class _HomePageState extends State<ResetPassword> {
     }
   }
 
-  void _cancel() async {
+  void _removePrefsExceptTheme() async {
+    bool theme;
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.remove('secureCode');
-    prefs.remove('resetPassEmail');
+    theme = prefs.getBool(_themePreferenceKey); //get theme value
+    prefs.clear(); //clear preferences
+    prefs.setBool(_themePreferenceKey, theme); //put back theme in preferences
+  }
+
+  void _cancel() async {
+    _removePrefsExceptTheme();
 
     Navigator.pushReplacement(
         context,

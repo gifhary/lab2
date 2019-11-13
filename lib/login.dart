@@ -219,7 +219,6 @@ class _LoginPageState extends State<LoginPage> {
       pr.show();
       http.post(urlSecurityCodeForResetPass, body: {
         "email": _email,
-        "password": _password,
       }).then((res) {
         print("secure code : " + res.body);
         if (res.body == "error") {
