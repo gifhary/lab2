@@ -1,6 +1,9 @@
 # my_pickup
 
-Lab 2 Flutter project.
+Flutter project for Mobile Development course. A simple Grab-like shared transportation
+mobile app. This project is a requirement to complete Mobile Development course.
+
+
 
 ## Getting Started
 
