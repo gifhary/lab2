@@ -4,7 +4,6 @@ import 'package:my_pickup/home.dart';
 import 'package:my_pickup/register.dart';
 import 'package:my_pickup/resetPassword.dart';
 import 'package:toast/toast.dart';
-import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:http/http.dart' as http;
@@ -12,7 +11,8 @@ import 'package:http/http.dart' as http;
 import 'theme/theme.dart' as Theme;
 
 String urlLogin = 'http://pickupandlaundry.com/my_pickup/gifhary/login.php';
-String urlSecurityCodeForResetPass = 'http://pickupandlaundry.com/my_pickup/gifhary/security_code.php';
+String urlSecurityCodeForResetPass =
+    'http://pickupandlaundry.com/my_pickup/gifhary/security_code.php';
 String logo = 'asset/img/logo.png';
 
 void main() => runApp(MyApp());
@@ -36,14 +36,10 @@ class _LoginPageState extends State<LoginPage> {
   String _email = "";
   final TextEditingController _passcontroller = TextEditingController();
   String _password = "";
-  bool _isSwitched = false;
 
-  static const String _themePreferenceKey = 'isDark';
 
   @override
   void initState() {
-    print('Init: $_email');
-    _loadThemePref();
     super.initState();
   }
 
@@ -102,26 +98,6 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     height: 10,
                   ),
-                  Row(
-                    children: <Widget>[
-                      Icon(
-                        Icons.brightness_medium,
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text('Dark Theme', style: TextStyle(fontSize: 16)),
-                      SizedBox(
-                        width: 25,
-                      ),
-                      Switch(
-                        value: _isSwitched,
-                        onChanged: (bool value) {
-                          _onThemeChanged(value);
-                        },
-                      ),
-                    ],
-                  ),
                   SizedBox(
                     height: 25,
                   ),
@@ -143,27 +119,6 @@ class _LoginPageState extends State<LoginPage> {
         ));
   }
 
-  void _loadThemePref() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    if (prefs.getBool(_themePreferenceKey) != null) {
-      _isSwitched = (prefs.getBool(_themePreferenceKey));
-      setState(() {});
-      print('ThemePrefs : DarkMode : ' +
-          prefs.getBool(_themePreferenceKey).toString());
-    }
-  }
-
-  void _onThemeChanged(bool value) {
-    if (value) {
-      DynamicTheme.of(context).setBrightness(Brightness.dark);
-      _isSwitched = true;
-    } else {
-      DynamicTheme.of(context).setBrightness(Brightness.light);
-      _isSwitched = false;
-    }
-  }
-
   void _onLogin() {
     _email = _emcontroller.text;
     _password = _passcontroller.text;
@@ -182,10 +137,10 @@ class _LoginPageState extends State<LoginPage> {
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
         if (res.body == "success") {
           pr.dismiss();
+          //save login credential
+          savePref(_email);
 
-          savePref(_email); //save login credential
-
-          Navigator.push(
+          Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => HomePage()));
         } else {
           pr.dismiss();
@@ -228,7 +183,7 @@ class _LoginPageState extends State<LoginPage> {
               duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
         } else {
           pr.dismiss();
-          
+
           _saveEmailForPassReset(_email);
           _saveSecureCode(res.body); //save secure code for password reset
 
@@ -248,7 +203,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void _saveEmailForPassReset(String email) async{
+  void _saveEmailForPassReset(String email) async {
     print('saving preferences');
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('resetPassEmail', email);

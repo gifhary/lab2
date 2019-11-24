@@ -34,6 +34,10 @@ dev_dependencies:
   progress_dialog:
   flutter_rating_bar:
   dynamic_theme:
+  geolocator:
+  google_maps_flutter:
+  place_picker:
+  flutter_slidable:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

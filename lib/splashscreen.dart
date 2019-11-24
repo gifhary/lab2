@@ -4,8 +4,6 @@ import 'home.dart';
 import 'theme/theme.dart' as Theme;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'login.dart';
-
 void main() => runApp(SplashScreen());
 
 class SplashScreen extends StatelessWidget {
@@ -14,9 +12,10 @@ class SplashScreen extends StatelessWidget {
     return new DynamicTheme(
         defaultBrightness: Brightness.light,
         data: (brightness) => new ThemeData(
-            brightness: brightness,
-            accentColor: Theme.darkThemeData.accentColor,
-            toggleableActiveColor: Theme.darkThemeData.toggleableActiveColor),
+          primaryColor: Theme.darkThemeData.primaryColor,
+          brightness: brightness,
+          accentColor: Theme.darkThemeData.accentColor,
+          toggleableActiveColor: Theme.darkThemeData.toggleableActiveColor),
         themedWidgetBuilder: (context, theme) {
           return new MaterialApp(
             theme: theme,
@@ -61,31 +60,25 @@ class _ProgressIndicatorState extends State<ProgressIndicator>
     animation = Tween(begin: 0.0, end: 1.0).animate(controller)
       ..addListener(() {
         setState(() {
+          print("logged in ? : ");
           if (animation.value > 0.99) {
-
-            checkPref().then((onValue) {
+            //just check user login status, without doing anything
+            _checkPref().then((onValue) {
               print("logged in ? : " + onValue.toString());
-
-              if (onValue) {
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (BuildContext context) => HomePage()));
-              } else {
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (BuildContext context) => LoginPage()));
-              }
             });
+
+            //even if user has not logged in, will directed to home page anyway
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (BuildContext context) => HomePage()));
           }
         });
       });
     controller.repeat();
   }
 
-  //if user is in preferences, automaticaly moved to home page
-  Future<bool> checkPref() async {
+  Future<bool> _checkPref() async {
     print('check preferences');
     bool result = false;
 
@@ -93,7 +86,7 @@ class _ProgressIndicatorState extends State<ProgressIndicator>
     String savedEmail = prefs.getString('email');
     if (savedEmail != null) {
       print('saved email : ' + savedEmail);
-      
+
       result = true;
     }
     return result;
