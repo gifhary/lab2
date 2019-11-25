@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_pickup/login.dart';
 import 'package:my_pickup/myJob.dart';
 import 'package:my_pickup/profile.dart';
+import 'package:my_pickup/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_theme/dynamic_theme.dart';
+import 'package:toast/toast.dart';
 import 'package:http/http.dart' as http;
 
 void main() => runApp(HomePage());
@@ -17,7 +20,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   static const String _themePreferenceKey = 'isDark';
   bool _isSwitched = false;
-  String _userName = "";
+
+  User user;
+  String _userName = "You are not logged in";
   String _email = "";
   bool _hasLoggedIn = false;
 
@@ -31,8 +36,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     pages = [
-      MyJobPage(),
-      ProfilePage(),
+      MyJobPage(user: user),
+      ProfilePage(user: user),
     ];
 
     _loadThemePref();
@@ -131,9 +136,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   onSelectItem(int index) {
-    setState(() {
-      pageIndex = index;
-    });
+    if (!_hasLoggedIn && index == 1) {
+      Toast.show('Login to view profile', context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    } else {
+      setState(() {
+        pageIndex = index;
+      });
+    }
+
     Navigator.of(context).pop();
   }
 
@@ -143,10 +154,22 @@ class _HomePageState extends State<HomePage> {
     http.post(url, body: {
       "email": email,
     }).then((res) {
-      print("user name : " + res.body);
+      var userData = json.decode(res.body);
+      print(userData.toString());
+      print("user name : " + userData['user_name']);
 
       setState(() {
-        _userName = res.body;
+        user = new User(
+            name: userData['user_name'],
+            email: userData['user_email'],
+            phone: userData['user_phone']);
+
+        _userName = userData['user_name'];
+
+        pages = [
+          MyJobPage(user: user),
+          ProfilePage(user: user),
+        ];
       });
     }).catchError((err) {
       print(err);
@@ -181,18 +204,17 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  outOrIn(bool value){
-    if(value){
+  outOrIn(bool value) {
+    if (value) {
       _logOut();
-    }
-    else{
+    } else {
       _logIn();
     }
   }
 
-  void _logIn(){
-      Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => LoginPage()));
+  void _logIn() {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => LoginPage()));
   }
 
   void _logOut() async {
@@ -209,6 +231,11 @@ class _HomePageState extends State<HomePage> {
     theme = prefs.getBool(_themePreferenceKey); //get theme value
     prefs.clear(); //clear preferences
     prefs.setBool(_themePreferenceKey, theme); //put back theme in preferences
-    setState(() {});
+    setState(() {
+      pages = [
+      MyJobPage(user: user),
+      ProfilePage(user: user),
+    ];
+    });
   }
 }

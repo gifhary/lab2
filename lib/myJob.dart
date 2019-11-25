@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_pickup/user.dart';
 
 void main() => runApp(MyJobPage());
 
 class MyJobPage extends StatefulWidget {
+  final User user;
+
+  MyJobPage({Key key, this.user});
+  
   @override
   _MyJobPageState createState() => _MyJobPageState();
 }
@@ -27,7 +32,7 @@ class _MyJobPageState extends State<MyJobPage> {
   }
 
   void _addJob() {
-    
+    print(widget.user.name);
   }
 
   Future<bool> _onBackPressAppBar() async {
