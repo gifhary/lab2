@@ -4,8 +4,8 @@ import 'package:my_pickup/login.dart';
 import 'package:my_pickup/myJob.dart';
 import 'package:my_pickup/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'theme/theme.dart' as Theme;
 import 'package:dynamic_theme/dynamic_theme.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(HomePage());
 
@@ -17,7 +17,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   static const String _themePreferenceKey = 'isDark';
   bool _isSwitched = false;
+  String _userName = "";
+  String _email = "";
   bool _hasLoggedIn = false;
+
+  String _lastNaviagion = "Log in";
 
   List<Widget> pages;
 
@@ -25,6 +29,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    super.initState();
     pages = [
       MyJobPage(),
       ProfilePage(),
@@ -33,113 +38,126 @@ class _HomePageState extends State<HomePage> {
     _loadThemePref();
 
     _checkPref().then((onValue) {
-      _hasLoggedIn = onValue;
+      if (onValue != null) {
+        _email = onValue;
+        _hasLoggedIn = true;
+        _lastNaviagion = "Log out";
+
+        _loadUserData(onValue);
+      }
     });
-    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onBackPressAppBar,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("My Pickup"),
-        ),
-        drawer: Drawer(
-          child: ListView(
-            children: <Widget>[
-              UserAccountsDrawerHeader(
-                accountName: Text("Ashish Rawat"),
-                accountEmail: Text("ashishrawat2911@gmail.com"),
-                currentAccountPicture: CircleAvatar(
-                  child: Text(
-                    "A",
-                    style: TextStyle(fontSize: 40.0),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("My Pickup"),
+      ),
+      body: pages[pageIndex],
+      drawer: Drawer(
+        child: ListView(
+          children: <Widget>[
+            UserAccountsDrawerHeader(
+              accountName: Text(_userName),
+              accountEmail: Text(_email),
+              currentAccountPicture: CircleAvatar(
+                child: Text(
+                  "A",
+                  style: TextStyle(fontSize: 40.0),
+                ),
+              ),
+            ),
+            ListTile(
+              title: Row(
+                children: <Widget>[
+                  Icon(Icons.brightness_medium),
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.0),
+                    child: Text('Dark Theme', style: TextStyle(fontSize: 16)),
                   ),
-                ),
+                ],
               ),
-              ListTile(
-                title: Row(
-                  children: <Widget>[
-                    Icon(Icons.brightness_medium),
-                    Padding(
-                      padding: EdgeInsets.only(left: 8.0),
-                      child: Text('Dark Theme', style: TextStyle(fontSize: 16)),
-                    ),
-                  ],
-                ),
-                trailing: Switch(
-                  value: _isSwitched,
-                  onChanged: (bool value) {
-                    _onThemeChanged(value);
-                  },
-                ),
+              trailing: Switch(
+                value: _isSwitched,
+                onChanged: (bool value) {
+                  _onThemeChanged(value);
+                },
               ),
-              ListTile(
-                title: Row(
-                  children: <Widget>[
-                    Icon(Icons.event),
-                    Padding(
-                      padding: EdgeInsets.only(left: 8.0),
-                      child: Text("My Job", style: TextStyle(fontSize: 16)),
-                    )
-                  ],
-                ),
-                onTap: _onSelectItem(0),
+            ),
+            ListTile(
+              title: Row(
+                children: <Widget>[
+                  Icon(Icons.event),
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.0),
+                    child: Text("My Job", style: TextStyle(fontSize: 16)),
+                  )
+                ],
               ),
-              ListTile(
-                title: Row(
-                  children: <Widget>[
-                    Icon(Icons.person),
-                    Padding(
-                      padding: EdgeInsets.only(left: 8.0),
-                      child: Text("Profile", style: TextStyle(fontSize: 16)),
-                    )
-                  ],
-                ),
-                onTap: _onSelectItem(1),
+              selected: pageIndex == 0,
+              onTap: () => onSelectItem(0),
+            ),
+            ListTile(
+              title: Row(
+                children: <Widget>[
+                  Icon(Icons.person),
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.0),
+                    child: Text("Profile", style: TextStyle(fontSize: 16)),
+                  )
+                ],
               ),
-              Divider(),
-              ListTile(
-                title: Row(
-                  children: <Widget>[
-                    Icon(Icons.exit_to_app),
-                    Padding(
-                      padding: EdgeInsets.only(left: 8.0),
-                      child: Text("Log out", style: TextStyle(fontSize: 16)),
-                    )
-                  ],
-                ),
-                onTap: _removePrefsExceptTheme,
+              selected: pageIndex == 1,
+              onTap: () => onSelectItem(1),
+            ),
+            Divider(),
+            ListTile(
+              title: Row(
+                children: <Widget>[
+                  Icon(Icons.exit_to_app),
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.0),
+                    child: Text(_lastNaviagion, style: TextStyle(fontSize: 16)),
+                  )
+                ],
               ),
-            ],
-          ),
+              onTap: () => outOrIn(_hasLoggedIn),
+            ),
+          ],
         ),
-        resizeToAvoidBottomPadding: false,
-        body: pages[pageIndex],
       ),
     );
   }
 
-  _onSelectItem(int index) {
+  onSelectItem(int index) {
     setState(() {
       pageIndex = index;
     });
+    Navigator.of(context).pop();
   }
 
-  Future<bool> _checkPref() async {
+  void _loadUserData(String email) {
+    String url = 'http://pickupandlaundry.com/my_pickup/gifhary/get_user.php';
+
+    http.post(url, body: {
+      "email": email,
+    }).then((res) {
+      print("user name : " + res.body);
+
+      setState(() {
+        _userName = res.body;
+      });
+    }).catchError((err) {
+      print(err);
+    });
+  }
+
+  Future<String> _checkPref() async {
     print('check preferences');
-    bool result = false;
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String savedEmail = prefs.getString('email');
-    if (savedEmail != null) {
-      print('saved email : ' + savedEmail);
 
-      result = true;
-    }
-    return result;
+    return prefs.getString('email');
   }
 
   void _loadThemePref() async {
@@ -163,18 +181,34 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _removePrefsExceptTheme() async {
+  outOrIn(bool value){
+    if(value){
+      _logOut();
+    }
+    else{
+      _logIn();
+    }
+  }
+
+  void _logIn(){
+      Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => LoginPage()));
+  }
+
+  void _logOut() async {
+    Navigator.of(context).pop();
+    //set page to myJob page
+    pageIndex = 0;
+    _hasLoggedIn = false;
+    _lastNaviagion = "Log in";
+    _email = "";
+    _userName = "You are not logged in";
+
     bool theme;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     theme = prefs.getBool(_themePreferenceKey); //get theme value
     prefs.clear(); //clear preferences
     prefs.setBool(_themePreferenceKey, theme); //put back theme in preferences
     setState(() {});
-  }
-
-  Future<bool> _onBackPressAppBar() async {
-    SystemNavigator.pop();
-    print('Backpress');
-    return Future.value(false);
   }
 }

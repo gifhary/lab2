@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
- 
+import 'package:flutter/services.dart';
+
 void main() => runApp(MyJobPage());
- 
+
 class MyJobPage extends StatefulWidget {
   @override
   _MyJobPageState createState() => _MyJobPageState();
@@ -10,15 +11,28 @@ class MyJobPage extends StatefulWidget {
 class _MyJobPageState extends State<MyJobPage> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Material App',
-      home: Scaffold(
-        body: Center(
-          child: Container(
-            child: Text('Kuntul'),
-          ),
+    return WillPopScope(
+      onWillPop: _onBackPressAppBar,
+      child: Scaffold(
+        resizeToAvoidBottomPadding: false,
+        body: SingleChildScrollView(
+          child: Text('MyJob'),
+        ),
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.add),
+          onPressed: _addJob,
         ),
       ),
     );
+  }
+
+  void _addJob() {
+    
+  }
+
+  Future<bool> _onBackPressAppBar() async {
+    SystemNavigator.pop();
+    print('Backpress');
+    return Future.value(false);
   }
 }

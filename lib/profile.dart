@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
  
 void main() => runApp(ProfilePage());
  
@@ -10,15 +11,20 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Material App',
-      home: Scaffold(
-        body: Center(
-          child: Container(
-            child: Text('Memeq'),
+   return WillPopScope(
+      onWillPop: _onBackPressAppBar,
+      child: Scaffold(
+        resizeToAvoidBottomPadding: false,
+        body: SingleChildScrollView(
+          child: Text('Profile')
           ),
-        ),
       ),
     );
+  }
+
+  Future<bool> _onBackPressAppBar() async {
+    SystemNavigator.pop();
+    print('Backpress');
+    return Future.value(false);
   }
 }
