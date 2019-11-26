@@ -1,26 +1,22 @@
 class Job {
-  String jobid,
-      jobtitle,
-      jobowner,
-      jobdes,
-      jobprice,
-      jobtime,
-      jobimage,
-      jobworker,
-      joblat,
-      joblon,
-      jobrating;
-//TODO modify to match our tabe colums
+  String jobId,
+      jobName,
+      jobPrice,
+      jobDesc,
+      jobLocation,
+      jobOwner,
+      jobDate,
+      jobImage,
+      driverEmail;
+
   Job(
-      {this.jobid,
-      this.jobtitle,
-      this.jobowner,
-      this.jobdes,
-      this.jobprice,
-      this.jobtime,
-      this.jobimage,
-      this.jobworker,
-      this.joblat,
-      this.joblon,
-      this.jobrating});
+      {this.jobId,
+      this.jobName,
+      this.jobPrice,
+      this.jobDesc,
+      this.jobLocation,
+      this.jobOwner,
+      this.jobDate,
+      this.jobImage,
+      this.driverEmail});
 }

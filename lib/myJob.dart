@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,9 @@ import 'package:my_pickup/jobDetail.dart';
 import 'package:my_pickup/user.dart';
 import 'package:device_info/device_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:progress_dialog/progress_dialog.dart';
+import 'package:image_picker/image_picker.dart';
 
 void main() => runApp(MyJobPage());
 
@@ -20,7 +24,14 @@ class MyJobPage extends StatefulWidget {
 }
 
 class _MyJobPageState extends State<MyJobPage> {
-  List<Job> job;
+  List<Job> job = [];
+  File _image;
+
+  String _assetPath = 'asset/img/camera.png';
+
+  final TextEditingController _jobNameCon = TextEditingController();
+  final TextEditingController _priceCon = TextEditingController();
+  final TextEditingController _descCon = TextEditingController();
 
   @override
   void initState() {
@@ -58,19 +69,18 @@ class _MyJobPageState extends State<MyJobPage> {
                       Padding(
                         padding: const EdgeInsets.all(10),
                         child: Image.network(
-                          //TODO display job image from retrieved path from DB
-                            "https://miro.medium.com/max/640/1*rIL0njh-OExpKt4WS55LMQ.jpeg"),
+                            "http://pickupandlaundry.com/my_pickup/gifhary/${job[position].jobImage}.jpg"),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(10),
                         child: Row(
                           children: <Widget>[
-                            //TODO display job name and price
-                            Text("JobName", style: TextStyle(fontSize: 16)),
+                            Text(job[position].jobName,
+                                style: TextStyle(fontSize: 16)),
                             SizedBox(
                               width: 50,
                             ),
-                            Text("JobPrice : RM",
+                            Text("Price : RM " + job[position].jobPrice,
                                 style: TextStyle(fontSize: 16)),
                           ],
                         ),
@@ -85,7 +95,7 @@ class _MyJobPageState extends State<MyJobPage> {
         ),
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
-          onPressed: _addJob,
+          onPressed: _addJobDialog,
         ),
       ),
     );
@@ -97,12 +107,121 @@ class _MyJobPageState extends State<MyJobPage> {
         MaterialPageRoute(builder: (context) => JobDetailPage(job: job)));
   }
 
-  void _addJob() {
-    //TODO load job from db
+  Future<void> _addJobDialog() {
+    return showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Order a Ride'),
+          content: Column(
+            children: <Widget>[
+              GestureDetector(
+                  onTap: _takePic,
+                  child: Container(
+                    width: 180,
+                    height: 200,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: _image == null
+                              ? AssetImage(_assetPath)
+                              : FileImage(_image),
+                          fit: BoxFit.fill,
+                        )),
+                  )),
+              TextField(
+                  controller: _jobNameCon,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: 'Job Name',
+                    icon: Icon(Icons.directions_car),
+                  )),
+              TextField(
+                  controller: _priceCon,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Price',
+                    icon: Icon(Icons.attach_money),
+                  )),
+              TextField(
+                  controller: _descCon,
+                  keyboardType: TextInputType.text,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    icon: Icon(Icons.description),
+                  )),
+            ],
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text('OK'),
+              onPressed: _uploadJob,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _uploadJob() {
+    Navigator.of(context).pop();
+    //TODO upload job here
+  }
+
+  void _takePic() async {
+    File _cameraImage = await ImagePicker.pickImage(source: ImageSource.camera);
+    if (_cameraImage != null) {
+      //Avoid crash if user cancel picking image
+      setState(() {
+        _image = _cameraImage;
+      });
+    }
   }
 
   void _loadJob(String email) {
-    //TODO load job with user email from db
+    String url = 'http://pickupandlaundry.com/my_pickup/gifhary/load_jobs.php';
+
+    ProgressDialog pr = new ProgressDialog(context,
+        type: ProgressDialogType.Normal, isDismissible: false);
+    pr.style(message: "Loading Jobs");
+    pr.show();
+
+    http.post(url, body: {
+      "email": email,
+    }).then((res) {
+      var jobData = json.decode(res.body);
+      print(jobData.toString());
+
+      List rawJobData = jobData["jobs"];
+      pr.dismiss();
+      _convertToJob(rawJobData);
+    }).catchError((err) {
+      print(err);
+      pr.dismiss();
+    });
+  }
+
+  void _convertToJob(List list) {
+    setState(() {
+      for (var jobData in list) {
+        job.add(new Job(
+            jobId: jobData['job_id'],
+            jobName: jobData['job_name'],
+            jobPrice: jobData['job_price'],
+            jobDesc: jobData['job_desc'],
+            jobLocation: jobData['job_location'],
+            jobOwner: jobData['job_owner'],
+            jobDate: jobData['job_date'],
+            jobImage: jobData['job_image'],
+            driverEmail: jobData['driver_email']));
+      }
+    });
   }
 
   static Future<String> _getDeviceId() async {
