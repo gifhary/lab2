@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_pickup/user.dart';
  
-void main() => runApp(ProfilePage());
+void main() => runApp(JobDonePage());
  
-class ProfilePage extends StatefulWidget {
+class JobDonePage extends StatefulWidget {
   final User user;
 
-  ProfilePage({Key key, this.user});
+  JobDonePage({Key key, this.user});
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  _JobDonePageState createState() => _JobDonePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _JobDonePageState extends State<JobDonePage> {
   @override
   Widget build(BuildContext context) {
    return WillPopScope(
@@ -21,7 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Scaffold(
         resizeToAvoidBottomPadding: false,
         body: SingleChildScrollView(
-          child: Text("profile")
+          child: Text("Job done"),
           ),
       ),
     );

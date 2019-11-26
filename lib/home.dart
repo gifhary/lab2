@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_pickup/jobDone.dart';
 import 'package:my_pickup/login.dart';
 import 'package:my_pickup/myJob.dart';
 import 'package:my_pickup/profile.dart';
@@ -35,10 +36,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    pages = [
-      MyJobPage(user: user),
-      ProfilePage(user: user),
-    ];
+
+    _updatePages();
 
     _loadThemePref();
 
@@ -101,7 +100,20 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               selected: pageIndex == 0,
-              onTap: () => onSelectItem(0),
+              onTap: () => _onSelectItem(0),
+            ),
+            ListTile(
+              title: Row(
+                children: <Widget>[
+                  Icon(Icons.check),
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.0),
+                    child: Text("Job Done", style: TextStyle(fontSize: 16)),
+                  )
+                ],
+              ),
+              selected: pageIndex == 1,
+              onTap: () => _onSelectItem(1),
             ),
             ListTile(
               title: Row(
@@ -113,8 +125,8 @@ class _HomePageState extends State<HomePage> {
                   )
                 ],
               ),
-              selected: pageIndex == 1,
-              onTap: () => onSelectItem(1),
+              selected: pageIndex == 2,
+              onTap: () => _onSelectItem(2),
             ),
             Divider(),
             ListTile(
@@ -135,8 +147,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  onSelectItem(int index) {
-    if (!_hasLoggedIn && index == 1) {
+  void _updatePages() {
+    pages = [
+      MyJobPage(user: user),
+      JobDonePage(user: user),
+      ProfilePage(user: user),
+    ];
+  }
+
+  _onSelectItem(int index) {
+    if (!_hasLoggedIn && index == 2) {
       Toast.show('Login to view profile', context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     } else {
@@ -166,10 +186,7 @@ class _HomePageState extends State<HomePage> {
 
         _userName = userData['user_name'];
 
-        pages = [
-          MyJobPage(user: user),
-          ProfilePage(user: user),
-        ];
+        _updatePages();
       });
     }).catchError((err) {
       print(err);
@@ -231,11 +248,9 @@ class _HomePageState extends State<HomePage> {
     theme = prefs.getBool(_themePreferenceKey); //get theme value
     prefs.clear(); //clear preferences
     prefs.setBool(_themePreferenceKey, theme); //put back theme in preferences
+
     setState(() {
-      pages = [
-      MyJobPage(user: user),
-      ProfilePage(user: user),
-    ];
+      _updatePages();
     });
   }
 }

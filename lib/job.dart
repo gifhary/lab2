@@ -10,7 +10,7 @@ class Job {
       joblat,
       joblon,
       jobrating;
-
+//TODO modify to match our tabe colums
   Job(
       {this.jobid,
       this.jobtitle,
