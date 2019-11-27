@@ -9,7 +9,6 @@ import 'package:my_pickup/user.dart';
 import 'package:device_info/device_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:progress_dialog/progress_dialog.dart';
 import 'package:image_picker/image_picker.dart';
 
 void main() => runApp(MyJobPage());
@@ -39,7 +38,8 @@ class _MyJobPageState extends State<MyJobPage> {
 
     _checkPref().then((email) {
       if (email != null) {
-        //if user logged in then load jon using user email
+        //if user logged in then load job using user email
+        print("Load job with email : " + email);
         _loadJob(email);
       } else {
         //else load job using device id
@@ -52,51 +52,48 @@ class _MyJobPageState extends State<MyJobPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onBackPressAppBar,
-      child: Scaffold(
-        resizeToAvoidBottomPadding: false,
-        body: ListView.builder(
-          itemBuilder: (context, position) {
-            return new GestureDetector(
-              onTap: () => _openDetail(job[position]),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Card(
-                    child: Container(
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Image.network(
-                            "http://pickupandlaundry.com/my_pickup/gifhary/${job[position].jobImage}.jpg"),
+    return Scaffold(
+      resizeToAvoidBottomPadding: false,
+      body: ListView.builder(
+        itemBuilder: (context, position) {
+          return new GestureDetector(
+            onTap: () => _openDetail(job[position]),
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: Card(
+                  child: Container(
+                child: Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Image.network(
+                          "http://pickupandlaundry.com/my_pickup/gifhary/image/${job[position].jobImage}"),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Row(
+                        children: <Widget>[
+                          Text(job[position].jobName,
+                              style: TextStyle(fontSize: 16)),
+                          SizedBox(
+                            width: 50,
+                          ),
+                          Text("Price : RM " + job[position].jobPrice,
+                              style: TextStyle(fontSize: 16)),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Row(
-                          children: <Widget>[
-                            Text(job[position].jobName,
-                                style: TextStyle(fontSize: 16)),
-                            SizedBox(
-                              width: 50,
-                            ),
-                            Text("Price : RM " + job[position].jobPrice,
-                                style: TextStyle(fontSize: 16)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-              ),
-            );
-          },
-          itemCount: 5,
-        ),
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add),
-          onPressed: _addJobDialog,
-        ),
+                    ),
+                  ],
+                ),
+              )),
+            ),
+          );
+        },
+        itemCount: job.length,
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: _addJobDialog,
       ),
     );
   }
@@ -150,6 +147,7 @@ class _MyJobPageState extends State<MyJobPage> {
                     labelText: 'Description',
                     icon: Icon(Icons.description),
                   )),
+              //TODO add location picker for create new job
             ],
           ),
           actions: <Widget>[
@@ -187,41 +185,36 @@ class _MyJobPageState extends State<MyJobPage> {
   void _loadJob(String email) {
     String url = 'http://pickupandlaundry.com/my_pickup/gifhary/load_jobs.php';
 
-    ProgressDialog pr = new ProgressDialog(context,
-        type: ProgressDialogType.Normal, isDismissible: false);
-    pr.style(message: "Loading Jobs");
-    pr.show();
+    //not using progress dialog
+    //there is one weird bug, the dialog still there after login
+    //even with pr.dismiss(), still wont dissapear
 
-    http.post(url, body: {
-      "email": email,
-    }).then((res) {
+    http.post(url, body: {"email": email}).then((res) {
       var jobData = json.decode(res.body);
-      print(jobData.toString());
-
-      List rawJobData = jobData["jobs"];
-      pr.dismiss();
-      _convertToJob(rawJobData);
+      setState(() {
+        List rawJobData = jobData["jobs"];
+        print("Raw Data : " + rawJobData.toString());
+        _convertToJob(rawJobData);
+      });
     }).catchError((err) {
       print(err);
-      pr.dismiss();
     });
   }
 
   void _convertToJob(List list) {
-    setState(() {
-      for (var jobData in list) {
-        job.add(new Job(
-            jobId: jobData['job_id'],
-            jobName: jobData['job_name'],
-            jobPrice: jobData['job_price'],
-            jobDesc: jobData['job_desc'],
-            jobLocation: jobData['job_location'],
-            jobOwner: jobData['job_owner'],
-            jobDate: jobData['job_date'],
-            jobImage: jobData['job_image'],
-            driverEmail: jobData['driver_email']));
-      }
-    });
+    for (var jobData in list) {
+      job.add(new Job(
+          jobId: jobData['job_id'],
+          jobName: jobData['job_name'],
+          jobPrice: jobData['job_price'],
+          jobDesc: jobData['job_desc'],
+          jobLocation: jobData['job_location'],
+          jobOwner: jobData['job_owner'],
+          jobDate: jobData['job_date'],
+          jobImage: jobData['job_image'],
+          driverEmail: jobData['driver_email']));
+    }
+    print("first job name : " + job[0].jobName);
   }
 
   static Future<String> _getDeviceId() async {
@@ -253,11 +246,5 @@ class _MyJobPageState extends State<MyJobPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     return prefs.getString('email');
-  }
-
-  Future<bool> _onBackPressAppBar() async {
-    SystemNavigator.pop();
-    print('Backpress');
-    return Future.value(false);
   }
 }

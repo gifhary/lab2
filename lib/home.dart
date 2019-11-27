@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage> {
                   Icon(Icons.event),
                   Padding(
                     padding: EdgeInsets.only(left: 8.0),
-                    child: Text("My Job", style: TextStyle(fontSize: 16)),
+                    child: Text("My Pickup", style: TextStyle(fontSize: 16)),
                   )
                 ],
               ),
@@ -108,7 +108,7 @@ class _HomePageState extends State<HomePage> {
                   Icon(Icons.check),
                   Padding(
                     padding: EdgeInsets.only(left: 8.0),
-                    child: Text("Job Done", style: TextStyle(fontSize: 16)),
+                    child: Text("Pickup Done", style: TextStyle(fontSize: 16)),
                   )
                 ],
               ),
@@ -249,8 +249,9 @@ class _HomePageState extends State<HomePage> {
     prefs.clear(); //clear preferences
     prefs.setBool(_themePreferenceKey, theme); //put back theme in preferences
 
-    setState(() {
-      _updatePages();
-    });
+    //back to home page to refresh MyJobPage
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => HomePage()));
+    
   }
 }

@@ -16,21 +16,15 @@ class JobDetailPage extends StatefulWidget {
 class _JobDetailPageState extends State<JobDetailPage> {
   @override
   Widget build(BuildContext context) {
-   return WillPopScope(
-      onWillPop: _onBackPressAppBar,
-      child: Scaffold(
-        resizeToAvoidBottomPadding: false,
-        body: SingleChildScrollView(
-          //TODO display all job details
-          child: Text("job detail")
-          ),
+   return Scaffold(
+     resizeToAvoidBottomPadding: false,
+     appBar: AppBar(
+        title: Text("Pickup Detail"),
       ),
-    );
-  }
-
-  Future<bool> _onBackPressAppBar() async {
-    SystemNavigator.pop();
-    print('Backpress');
-    return Future.value(false);
+     body: SingleChildScrollView(
+       //TODO display all job details
+       child: Text("pickup detail")
+       ),
+   );
   }
 }
