@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:dynamic_theme/dynamic_theme.dart';
+import 'package:my_pickup/user.dart';
 import 'home.dart';
 import 'theme/theme.dart' as Theme;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(SplashScreen());
 
@@ -12,10 +16,10 @@ class SplashScreen extends StatelessWidget {
     return new DynamicTheme(
         defaultBrightness: Brightness.light,
         data: (brightness) => new ThemeData(
-          primaryColor: Theme.darkThemeData.primaryColor,
-          brightness: brightness,
-          accentColor: Theme.darkThemeData.accentColor,
-          toggleableActiveColor: Theme.darkThemeData.toggleableActiveColor),
+            primaryColor: Theme.darkThemeData.primaryColor,
+            brightness: brightness,
+            accentColor: Theme.darkThemeData.accentColor,
+            toggleableActiveColor: Theme.darkThemeData.toggleableActiveColor),
         themedWidgetBuilder: (context, theme) {
           return new MaterialApp(
             theme: theme,
@@ -51,6 +55,7 @@ class _ProgressIndicatorState extends State<ProgressIndicator>
     with SingleTickerProviderStateMixin {
   AnimationController controller;
   Animation<double> animation;
+  String urlLogin = 'http://pickupandlaundry.com/my_pickup/gifhary/login.php';
 
   @override
   void initState() {
@@ -60,36 +65,54 @@ class _ProgressIndicatorState extends State<ProgressIndicator>
     animation = Tween(begin: 0.0, end: 1.0).animate(controller)
       ..addListener(() {
         setState(() {
-          print("logged in ? : ");
-          if (animation.value > 0.99) {
-            //just check user login status, without doing anything
-            _checkPref().then((onValue) {
-              print("logged in ? : " + onValue.toString());
-            });
-
-            //even if user has not logged in, will directed to home page anyway
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (BuildContext context) => HomePage()));
-          }
+          _checkPref().then((onValue) {
+            if (onValue[0] != null && onValue[1] != null) {
+              _getUser(onValue[0], onValue[1]);
+            } else {
+              _moveToHome(null);
+            }
+          });
         });
       });
     controller.repeat();
   }
 
-  Future<bool> _checkPref() async {
+  void _moveToHome(User user) {
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (BuildContext context) => HomePage(user: user)));
+  }
+
+  void _getUser(String email, String password) {
+    http.post(urlLogin, body: {
+      "email": email,
+      "password": password,
+    }).then((res) {
+      print("status code : " + res.statusCode.toString());
+      if (res.body != "failed") {
+        var userData = json.decode(res.body);
+        print("user data : " + userData.toString());
+
+        User user = new User(
+            name: userData['user_name'],
+            email: userData['user_email'],
+            phone: userData['user_phone']);
+
+        _moveToHome(user);
+      }
+    }).catchError((err) {
+      print(err);
+    });
+  }
+
+  Future<List> _checkPref() async {
     print('check preferences');
-    bool result = false;
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String savedEmail = prefs.getString('email');
-    if (savedEmail != null) {
-      print('saved email : ' + savedEmail);
+    String email = prefs.getString('email');
+    String password = prefs.getString('password');
 
-      result = true;
-    }
-    return result;
+    return [email, password];
   }
 
   @override

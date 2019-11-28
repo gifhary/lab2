@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_pickup/home.dart';
 import 'package:my_pickup/register.dart';
 import 'package:my_pickup/resetPassword.dart';
+import 'package:my_pickup/user.dart';
 import 'package:toast/toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:progress_dialog/progress_dialog.dart';
@@ -36,7 +39,6 @@ class _LoginPageState extends State<LoginPage> {
   String _email = "";
   final TextEditingController _passcontroller = TextEditingController();
   String _password = "";
-
 
   @override
   void initState() {
@@ -133,17 +135,29 @@ class _LoginPageState extends State<LoginPage> {
         "password": _password,
       }).then((res) {
         print("status code : " + res.statusCode.toString());
-        Toast.show(res.body, context,
-            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-        if (res.body == "success") {
+        if (res.body != "failed") {
           pr.dismiss();
           //save login credential
-          savePref(_email);
+          savePref("email", _email);
+          savePref("password", _password);
 
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => HomePage()));
+          Toast.show("success", context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+
+          var userData = json.decode(res.body);
+          print("user data : " + userData.toString());
+
+          User user = new User(
+              name: userData['user_name'],
+              email: userData['user_email'],
+              phone: userData['user_phone']);
+
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => HomePage(user: user)));
         } else {
           pr.dismiss();
+          Toast.show(res.body, context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
         }
       }).catchError((err) {
         pr.dismiss();
@@ -152,10 +166,10 @@ class _LoginPageState extends State<LoginPage> {
     } else {}
   }
 
-  void savePref(String email) async {
+  void savePref(String key, String value) async {
     print('saving preferences');
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', email);
+    await prefs.setString(key, value);
   }
 
   void _onRegister() {

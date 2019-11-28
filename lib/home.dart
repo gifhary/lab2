@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_pickup/jobDone.dart';
@@ -9,11 +8,15 @@ import 'package:my_pickup/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:toast/toast.dart';
-import 'package:http/http.dart' as http;
+import 'package:cached_network_image/cached_network_image.dart';
 
 void main() => runApp(HomePage());
 
 class HomePage extends StatefulWidget {
+  final User user;
+
+  const HomePage({Key key, this.user}) : super(key: key);
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -22,10 +25,11 @@ class _HomePageState extends State<HomePage> {
   static const String _themePreferenceKey = 'isDark';
   bool _isSwitched = false;
 
-  User user;
   String _userName = "You are not logged in";
   String _email = "";
   bool _hasLoggedIn = false;
+  String _profilePath = 'asset/img/profile.png';
+  String _avatarUrl = "";
 
   String _lastNaviagion = "Log in";
 
@@ -37,19 +41,19 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
+    _loadThemePref();
     _updatePages();
 
-    _loadThemePref();
+    if (widget.user != null) {
+      _email = widget.user.email;
+      _userName = widget.user.name;
+      _hasLoggedIn = true;
+      _lastNaviagion = "Log out";
+      _avatarUrl =
+          "http://pickupandlaundry.com/my_pickup/gifhary/profile/$_email.jpg";
 
-    _checkPref().then((onValue) {
-      if (onValue != null) {
-        _email = onValue;
-        _hasLoggedIn = true;
-        _lastNaviagion = "Log out";
-
-        _loadUserData(onValue);
-      }
-    });
+      _updatePages();
+    }
   }
 
   @override
@@ -66,9 +70,17 @@ class _HomePageState extends State<HomePage> {
               accountName: Text(_userName),
               accountEmail: Text(_email),
               currentAccountPicture: CircleAvatar(
-                child: Text(
-                  "A",
-                  style: TextStyle(fontSize: 40.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(50.0),
+                  child: CachedNetworkImage(
+                    fit: BoxFit.cover,
+                    width: 100,
+                    height: 100,
+                    placeholder: (context, url) => CircularProgressIndicator(),
+                    imageUrl: _avatarUrl,
+                    errorWidget: (context, url, error) =>
+                        Image.asset(_profilePath),
+                  ),
                 ),
               ),
             ),
@@ -149,9 +161,9 @@ class _HomePageState extends State<HomePage> {
 
   void _updatePages() {
     pages = [
-      MyJobPage(user: user),
-      JobDonePage(user: user),
-      ProfilePage(user: user),
+      MyJobPage(user: widget.user),
+      JobDonePage(user: widget.user),
+      ProfilePage(user: widget.user),
     ];
   }
 
@@ -166,38 +178,6 @@ class _HomePageState extends State<HomePage> {
     }
 
     Navigator.of(context).pop();
-  }
-
-  void _loadUserData(String email) {
-    String url = 'http://pickupandlaundry.com/my_pickup/gifhary/get_user.php';
-
-    http.post(url, body: {
-      "email": email,
-    }).then((res) {
-      var userData = json.decode(res.body);
-      print(userData.toString());
-      print("user name : " + userData['user_name']);
-
-      setState(() {
-        user = new User(
-            name: userData['user_name'],
-            email: userData['user_email'],
-            phone: userData['user_phone']);
-
-        _userName = userData['user_name'];
-
-        _updatePages();
-      });
-    }).catchError((err) {
-      print(err);
-    });
-  }
-
-  Future<String> _checkPref() async {
-    print('check preferences');
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    return prefs.getString('email');
   }
 
   void _loadThemePref() async {
@@ -237,7 +217,6 @@ class _HomePageState extends State<HomePage> {
   void _logOut() async {
     Navigator.of(context).pop();
     //set page to myJob page
-    pageIndex = 0;
     _hasLoggedIn = false;
     _lastNaviagion = "Log in";
     _email = "";
@@ -251,7 +230,6 @@ class _HomePageState extends State<HomePage> {
 
     //back to home page to refresh MyJobPage
     Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => HomePage()));
-    
+        context, MaterialPageRoute(builder: (context) => HomePage(user: null)));
   }
 }

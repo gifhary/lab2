@@ -35,6 +35,9 @@ dev_dependencies:
   flutter_rating_bar:
   dynamic_theme:
   device_info:
+  cached_network_image:
+  timeago:
+  intl:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

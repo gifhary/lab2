@@ -5,11 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_pickup/job.dart';
 import 'package:my_pickup/jobDetail.dart';
+import 'package:my_pickup/slidingRoute.dart';
 import 'package:my_pickup/user.dart';
 import 'package:device_info/device_info.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'theme/theme.dart' as Theme;
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:intl/intl.dart';
 
 void main() => runApp(MyJobPage());
 
@@ -24,6 +28,7 @@ class MyJobPage extends StatefulWidget {
 
 class _MyJobPageState extends State<MyJobPage> {
   List<Job> job = [];
+  String _defaultImg = 'asset/img/profile.png';
   File _image;
 
   String _assetPath = 'asset/img/camera.png';
@@ -36,18 +41,16 @@ class _MyJobPageState extends State<MyJobPage> {
   void initState() {
     super.initState();
 
-    _checkPref().then((email) {
-      if (email != null) {
-        //if user logged in then load job using user email
-        print("Load job with email : " + email);
-        _loadJob(email);
-      } else {
-        //else load job using device id
-        _getDeviceId().then((deviceId) {
-          _loadJob(deviceId);
-        });
-      }
-    });
+    if (widget.user.email != null) {
+      //if user logged in then load job using user email
+      print("Load job with email : " + widget.user.email);
+      _loadJob(widget.user.email);
+    } else {
+      //else load job using device id
+      _getDeviceId().then((deviceId) {
+        _loadJob(deviceId);
+      });
+    }
   }
 
   @override
@@ -59,33 +62,68 @@ class _MyJobPageState extends State<MyJobPage> {
           return new GestureDetector(
             onTap: () => _openDetail(job[position]),
             child: Padding(
-              padding: const EdgeInsets.all(5),
+              padding: const EdgeInsets.all(4),
               child: Card(
-                  child: Container(
-                child: Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Image.network(
-                          "http://pickupandlaundry.com/my_pickup/gifhary/image/${job[position].jobImage}"),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Row(
-                        children: <Widget>[
-                          Text(job[position].jobName,
-                              style: TextStyle(fontSize: 16)),
-                          SizedBox(
-                            width: 50,
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ClipPath(
+                    clipper: ShapeBorderClipper(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10))),
+                    child: Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: Theme.darkThemeData.primaryColor,
+                              width: 10,
+                            ),
                           ),
-                          Text("Price : RM " + job[position].jobPrice,
-                              style: TextStyle(fontSize: 16)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              )),
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(40.0),
+                                child: CachedNetworkImage(
+                                  fit: BoxFit.cover,
+                                  width: 80,
+                                  height: 80,
+                                  placeholder: (context, url) =>
+                                      CircularProgressIndicator(),
+                                  imageUrl:
+                                      "http://pickupandlaundry.com/my_pickup/gifhary/image/${job[position].jobImage}",
+                                  errorWidget: (context, url, error) =>
+                                      Image.asset(_defaultImg),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 15,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(job[position].jobName,
+                                    style: TextStyle(
+                                        fontSize: 25,
+                                        fontWeight: FontWeight.bold)),
+                                Text("RM " + job[position].jobPrice,
+                                    style: TextStyle(fontSize: 18)),
+                                SizedBox(
+                                  height: 20,
+                                ),
+                                Text(
+                                    timeago.format(
+                                        _jobTime(job[position].jobDate)),
+                                    style: TextStyle(fontSize: 14)),
+                              ],
+                            ),
+                          ],
+                        )),
+                  )),
             ),
           );
         },
@@ -98,10 +136,14 @@ class _MyJobPageState extends State<MyJobPage> {
     );
   }
 
+  DateTime _jobTime(String time) {
+    DateTime dateTime = new DateFormat("dd/MM/yyyy HH:mm:ss").parse(time);
+    return dateTime;
+  }
+
   _openDetail(Job job) {
     //open detail page with job object (obvious stuff :D)
-    Navigator.push(context,
-        MaterialPageRoute(builder: (context) => JobDetailPage(job: job)));
+    Navigator.push(context, SlideRightRoute(page: JobDetailPage(job: job)));
   }
 
   Future<void> _addJobDialog() {
@@ -110,45 +152,47 @@ class _MyJobPageState extends State<MyJobPage> {
       builder: (context) {
         return AlertDialog(
           title: Text('Order a Ride'),
-          content: Column(
-            children: <Widget>[
-              GestureDetector(
-                  onTap: _takePic,
-                  child: Container(
-                    width: 180,
-                    height: 200,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: _image == null
-                              ? AssetImage(_assetPath)
-                              : FileImage(_image),
-                          fit: BoxFit.fill,
-                        )),
-                  )),
-              TextField(
-                  controller: _jobNameCon,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: 'Job Name',
-                    icon: Icon(Icons.directions_car),
-                  )),
-              TextField(
-                  controller: _priceCon,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Price',
-                    icon: Icon(Icons.attach_money),
-                  )),
-              TextField(
-                  controller: _descCon,
-                  keyboardType: TextInputType.text,
-                  decoration: InputDecoration(
-                    labelText: 'Description',
-                    icon: Icon(Icons.description),
-                  )),
-              //TODO add location picker for create new job
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                GestureDetector(
+                    onTap: _takePic,
+                    child: Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: _image == null
+                                ? AssetImage(_assetPath)
+                                : FileImage(_image),
+                            fit: BoxFit.fill,
+                          )),
+                    )),
+                TextField(
+                    controller: _jobNameCon,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Job Name',
+                      icon: Icon(Icons.directions_car),
+                    )),
+                TextField(
+                    controller: _priceCon,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Price',
+                      icon: Icon(Icons.attach_money),
+                    )),
+                TextField(
+                    controller: _descCon,
+                    keyboardType: TextInputType.text,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      icon: Icon(Icons.description),
+                    )),
+                //TODO add location picker for create new job
+              ],
+            ),
           ),
           actions: <Widget>[
             FlatButton(
@@ -188,14 +232,15 @@ class _MyJobPageState extends State<MyJobPage> {
     //not using progress dialog
     //there is one weird bug, the dialog still there after login
     //even with pr.dismiss(), still wont dissapear
-
     http.post(url, body: {"email": email}).then((res) {
-      var jobData = json.decode(res.body);
-      setState(() {
-        List rawJobData = jobData["jobs"];
-        print("Raw Data : " + rawJobData.toString());
-        _convertToJob(rawJobData);
-      });
+      if (res.body != "nodata") {
+        var jobData = json.decode(res.body);
+        setState(() {
+          List rawJobData = jobData["jobs"];
+          print("Raw Data : " + rawJobData.toString());
+          _convertToJob(rawJobData);
+        });
+      }
     }).catchError((err) {
       print(err);
     });
@@ -234,17 +279,5 @@ class _MyJobPageState extends State<MyJobPage> {
     }
 
     return identifier;
-  }
-
-  //use preferences to get email instead of widget.user.email
-  //getting email from previous class take some time to load from
-  //database and can cause error in this class or user has logged in
-  //but this class consider user as not logged in since the email
-  //come late
-  Future<String> _checkPref() async {
-    print('check preferences');
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    return prefs.getString('email');
   }
 }

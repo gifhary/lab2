@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_pickup/user.dart';
 import 'package:toast/toast.dart';
 import 'package:http/http.dart' as http;
 import 'package:progress_dialog/progress_dialog.dart';
@@ -13,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'theme/theme.dart' as Theme;
 
-String profilePath = 'asset/img/profile.png';
+String _profilePath = 'asset/img/profile.png';
 String urlUpload = 'http://pickupandlaundry.com/my_pickup/gifhary/register.php';
 File _image;
 final TextEditingController _namecontroller = TextEditingController();
@@ -83,7 +84,7 @@ class RegisterWidgetState extends State<RegisterWidget> {
                   shape: BoxShape.circle,
                   image: DecorationImage(
                     image: _image == null
-                        ? AssetImage(profilePath)
+                        ? AssetImage(_profilePath)
                         : FileImage(_image),
                     fit: BoxFit.fill,
                   )),
@@ -232,6 +233,7 @@ class RegisterWidgetState extends State<RegisterWidget> {
 
           if (res.body == "success") {
             pr.dismiss();
+            User user = new User(name: _name, email: _email, phone: _phone);
             _image = null;
             _namecontroller.text = '';
             _emcontroller.text = '';
@@ -242,7 +244,7 @@ class RegisterWidgetState extends State<RegisterWidget> {
             Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                    builder: (BuildContext context) => HomePage()));
+                    builder: (BuildContext context) => HomePage(user: user)));
           } else {
             pr.dismiss();
           }

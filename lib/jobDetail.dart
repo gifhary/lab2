@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:my_pickup/job.dart';
  
 void main() => runApp(JobDetailPage());
@@ -19,11 +18,11 @@ class _JobDetailPageState extends State<JobDetailPage> {
    return Scaffold(
      resizeToAvoidBottomPadding: false,
      appBar: AppBar(
-        title: Text("Pickup Detail"),
+        title: Text("Details"),
       ),
      body: SingleChildScrollView(
        //TODO display all job details
-       child: Text("pickup detail")
+       child: Text(widget.job.jobName)
        ),
    );
   }
