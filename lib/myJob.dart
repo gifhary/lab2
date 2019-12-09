@@ -9,11 +9,11 @@ import 'package:my_pickup/slidingRoute.dart';
 import 'package:my_pickup/user.dart';
 import 'package:device_info/device_info.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'theme/theme.dart' as Theme;
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(MyJobPage());
 
@@ -29,9 +29,8 @@ class MyJobPage extends StatefulWidget {
 class _MyJobPageState extends State<MyJobPage> {
   List<Job> job = [];
   String _defaultImg = 'asset/img/profile.png';
-  File _image;
-
-  String _assetPath = 'asset/img/camera.png';
+  String _avatarUrl = "";
+  String _email = "";
 
   final TextEditingController _jobNameCon = TextEditingController();
   final TextEditingController _priceCon = TextEditingController();
@@ -41,10 +40,13 @@ class _MyJobPageState extends State<MyJobPage> {
   void initState() {
     super.initState();
 
-    if (widget.user.email != null) {
+    if (widget.user != null) {
       //if user logged in then load job using user email
       print("Load job with email : " + widget.user.email);
       _loadJob(widget.user.email);
+      _email = widget.user.email;
+      _avatarUrl =
+          "http://pickupandlaundry.com/my_pickup/gifhary/profile/$_email.jpg";
     } else {
       //else load job using device id
       _getDeviceId().then((deviceId) {
@@ -93,8 +95,7 @@ class _MyJobPageState extends State<MyJobPage> {
                                   height: 80,
                                   placeholder: (context, url) =>
                                       CircularProgressIndicator(),
-                                  imageUrl:
-                                      "http://pickupandlaundry.com/my_pickup/gifhary/image/${job[position].jobImage}",
+                                  imageUrl: _avatarUrl,
                                   errorWidget: (context, url, error) =>
                                       Image.asset(_defaultImg),
                                 ),
@@ -155,20 +156,6 @@ class _MyJobPageState extends State<MyJobPage> {
           content: SingleChildScrollView(
             child: Column(
               children: <Widget>[
-                GestureDetector(
-                    onTap: _takePic,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                            image: _image == null
-                                ? AssetImage(_assetPath)
-                                : FileImage(_image),
-                            fit: BoxFit.fill,
-                          )),
-                    )),
                 TextField(
                     controller: _jobNameCon,
                     keyboardType: TextInputType.emailAddress,
@@ -216,16 +203,6 @@ class _MyJobPageState extends State<MyJobPage> {
     //TODO upload job here
   }
 
-  void _takePic() async {
-    File _cameraImage = await ImagePicker.pickImage(source: ImageSource.camera);
-    if (_cameraImage != null) {
-      //Avoid crash if user cancel picking image
-      setState(() {
-        _image = _cameraImage;
-      });
-    }
-  }
-
   void _loadJob(String email) {
     String url = 'http://pickupandlaundry.com/my_pickup/gifhary/load_jobs.php';
 
@@ -235,11 +212,10 @@ class _MyJobPageState extends State<MyJobPage> {
     http.post(url, body: {"email": email}).then((res) {
       if (res.body != "nodata") {
         var jobData = json.decode(res.body);
-        setState(() {
-          List rawJobData = jobData["jobs"];
-          print("Raw Data : " + rawJobData.toString());
-          _convertToJob(rawJobData);
-        });
+
+        List rawJobData = jobData["jobs"];
+        print("Raw Data : " + rawJobData.toString());
+        _convertToJob(rawJobData);
       }
     }).catchError((err) {
       print(err);
@@ -247,19 +223,27 @@ class _MyJobPageState extends State<MyJobPage> {
   }
 
   void _convertToJob(List list) {
-    for (var jobData in list) {
-      job.add(new Job(
-          jobId: jobData['job_id'],
-          jobName: jobData['job_name'],
-          jobPrice: jobData['job_price'],
-          jobDesc: jobData['job_desc'],
-          jobLocation: jobData['job_location'],
-          jobOwner: jobData['job_owner'],
-          jobDate: jobData['job_date'],
-          jobImage: jobData['job_image'],
-          driverEmail: jobData['driver_email']));
-    }
-    print("first job name : " + job[0].jobName);
+    setState(() {
+      for (var jobData in list) {
+        job.add(new Job(
+            jobId: jobData['job_id'],
+            jobName: jobData['job_name'],
+            jobPrice: jobData['job_price'],
+            jobDesc: jobData['job_desc'],
+            jobLocation: jobData['job_location'],
+            jobOwner: jobData['job_owner'],
+            jobDate: jobData['job_date'],
+            jobImage: jobData['job_image'],
+            driverEmail: jobData['driver_email']));
+      }
+      print("first job name : " + job[0].jobName);
+      _setStringPrefs(job.length.toString());
+    });
+  }
+
+  void _setStringPrefs(String value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("myPickupCount", value);
   }
 
   static Future<String> _getDeviceId() async {

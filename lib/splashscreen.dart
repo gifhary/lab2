@@ -97,7 +97,8 @@ class _ProgressIndicatorState extends State<ProgressIndicator>
         User user = new User(
             name: userData['user_name'],
             email: userData['user_email'],
-            phone: userData['user_phone']);
+            phone: userData['user_phone'],
+            credit: userData['credit']);
 
         _moveToHome(user);
       }

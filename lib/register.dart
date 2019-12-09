@@ -150,6 +150,7 @@ class RegisterWidgetState extends State<RegisterWidget> {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
+              ListTile(title: Text("Update Picture")),
               _createTile(context, 'Camera', Icons.camera, _action1),
               _createTile(context, 'Gallery', Icons.photo_library, _action2),
             ],

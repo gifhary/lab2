@@ -10,11 +10,13 @@ import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:toast/toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+String myPickupCount = "";
+String pickupDoneCount = "";
+
 void main() => runApp(HomePage());
 
 class HomePage extends StatefulWidget {
   final User user;
-
   const HomePage({Key key, this.user}) : super(key: key);
 
   @override
@@ -43,6 +45,17 @@ class _HomePageState extends State<HomePage> {
 
     _loadThemePref();
     _updatePages();
+
+    _loadStringPrefs("myPickupCount").then((count) {
+      if (count != null) {
+        myPickupCount = count;
+      }
+    });
+    _loadStringPrefs("pickupDoneCount").then((count) {
+      if (count != null) {
+        pickupDoneCount = count;
+      }
+    });
 
     if (widget.user != null) {
       _email = widget.user.email;
@@ -111,6 +124,7 @@ class _HomePageState extends State<HomePage> {
                   )
                 ],
               ),
+              trailing: Text(myPickupCount),
               selected: pageIndex == 0,
               onTap: () => _onSelectItem(0),
             ),
@@ -124,6 +138,7 @@ class _HomePageState extends State<HomePage> {
                   )
                 ],
               ),
+              trailing: Text(pickupDoneCount),
               selected: pageIndex == 1,
               onTap: () => _onSelectItem(1),
             ),
@@ -184,11 +199,16 @@ class _HomePageState extends State<HomePage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     if (prefs.getBool(_themePreferenceKey) != null) {
-      _isSwitched = (prefs.getBool(_themePreferenceKey));
+      _isSwitched = prefs.getBool(_themePreferenceKey);
       setState(() {});
       print('ThemePrefs : DarkMode : ' +
           prefs.getBool(_themePreferenceKey).toString());
     }
+  }
+
+  Future<String> _loadStringPrefs(String key) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(key);
   }
 
   void _onThemeChanged(bool value) {
