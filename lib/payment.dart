@@ -3,6 +3,8 @@ import 'package:my_pickup/user.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter/material.dart';
 
+import 'home.dart';
+
 class PaymentPage extends StatefulWidget {
   final User user;
   final String orderid, val;
@@ -17,32 +19,43 @@ class _PaymentPageState extends State<PaymentPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text('Payment'),
-        ),
-        body: Column(
-          children: <Widget>[
-            Expanded(
-              child: WebView(
-                initialUrl:
-                    'http://pickupandlaundry.com/my_pickup/gifhary/payment.php?email=' +
-                        widget.user.email +
-                        '&mobile=' +
-                        widget.user.phone +
-                        '&name=' +
-                        widget.user.name +
-                        '&amount=' +
-                        widget.val +
-                        '&orderid=' +
-                        widget.orderid,
-                javascriptMode: JavascriptMode.unrestricted,
-                onWebViewCreated: (WebViewController webViewController) {
-                  _controller.complete(webViewController);
-                },
-              ),
-            )
-          ],
-        ));
+    return WillPopScope(
+        onWillPop: _onBackPressAppBar,
+        child: Scaffold(
+            appBar: AppBar(
+              title: Text('Payment'),
+            ),
+            body: Column(
+              children: <Widget>[
+                Expanded(
+                  child: WebView(
+                    initialUrl:
+                    //Abdullah's url
+                        'https://sharpns.net/mybarber3/php/payment/payment.php?email=' +
+                            widget.user.email +
+                            '&mobile=' +
+                            widget.user.phone +
+                            '&name=' +
+                            widget.user.name +
+                            '&amount=' +
+                            widget.val +
+                            '&orderid=' +
+                            widget.orderid,
+                    javascriptMode: JavascriptMode.unrestricted,
+                    onWebViewCreated: (WebViewController webViewController) {
+                      _controller.complete(webViewController);
+                    },
+                  ),
+                )
+              ],
+            )));
+  }
+
+  Future<bool> _onBackPressAppBar() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage()),
+    );
+    return Future.value(false);
   }
 }
