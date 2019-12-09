@@ -26,7 +26,7 @@ class _PaymentPageState extends State<PaymentPage> {
             Expanded(
               child: WebView(
                 initialUrl:
-                    'https://pickupandlaundry.com/my_pickup/gifhary/payment.php?email=' +
+                    'http://pickupandlaundry.com/my_pickup/gifhary/payment.php?email=' +
                         widget.user.email +
                         '&mobile=' +
                         widget.user.phone +
