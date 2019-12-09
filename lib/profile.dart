@@ -52,96 +52,102 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Container(
-            color: Theme.darkThemeData.primaryColor,
-            child: Column(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: GestureDetector(
-                    onTap: () => mainBottomSheet(context),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(75),
-                      child: CachedNetworkImage(
-                        fit: BoxFit.cover,
-                        width: 150,
-                        height: 150,
-                        placeholder: (context, url) =>
-                            CircularProgressIndicator(),
-                        imageUrl: _avatarUrl,
-                        errorWidget: (context, url, error) =>
-                            Image.asset(_profilePath),
+    return Scaffold(
+      resizeToAvoidBottomPadding: false,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Container(
+                color: Theme.darkThemeData.primaryColor,
+                child: Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: GestureDetector(
+                        onTap: () => mainBottomSheet(context),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(60),
+                          child: CachedNetworkImage(
+                            fit: BoxFit.cover,
+                            width: 120,
+                            height: 120,
+                            placeholder: (context, url) =>
+                                CircularProgressIndicator(),
+                            imageUrl: _avatarUrl,
+                            errorWidget: (context, url, error) =>
+                                Image.asset(_profilePath),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                Text(_username, style: TextStyle(fontSize: 24)),
-                SizedBox(height: 15),
-                Card(
-                  elevation: 10,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
-                    child: Column(
-                      children: <Widget>[
-                        Text("Credits", style: TextStyle(fontSize: 18)),
-                        SizedBox(height: 5),
-                        Text(_credit,
-                            style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.darkThemeData.primaryColor)),
-                      ],
+                    Text(_username, style: TextStyle(fontSize: 24)),
+                    SizedBox(height: 15),
+                    Card(
+                      elevation: 10,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 5, 18, 5),
+                        child: Column(
+                          children: <Widget>[
+                            Text("Credits", style: TextStyle(fontSize: 18)),
+                            SizedBox(height: 5),
+                            Text(_credit,
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.darkThemeData.primaryColor)),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
+                )),
+            SizedBox(height: 40),
+            Row(
+              children: <Widget>[
+                SizedBox(width: 40),
+                Icon(Icons.email),
+                SizedBox(width: 20),
+                Flexible(
+                  child: Text(_email, style: TextStyle(fontSize: 18)),
                 ),
               ],
-            )),
-        SizedBox(height: 40),
-        Row(
-          children: <Widget>[
-            SizedBox(width: 40),
-            Icon(Icons.email),
-            SizedBox(width: 20),
-            Flexible(
-              child: Text(_email, style: TextStyle(fontSize: 18)),
+            ),
+            SizedBox(height: 20),
+            Row(
+              children: <Widget>[
+                SizedBox(width: 40),
+                Icon(Icons.phone_android),
+                SizedBox(width: 20),
+                Flexible(
+                  child: Text(_phone, style: TextStyle(fontSize: 18)),
+                ),
+              ],
+            ),
+            SizedBox(height: 90),
+            Padding(
+              padding: const EdgeInsets.only(left: 100, right: 100),
+              child: MaterialButton(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0)),
+                height: 50,
+                child: Text(
+                  'Top Up Credit',
+                  style: new TextStyle(
+                      fontSize: 20.0,
+                      color: Theme.darkThemeData.primaryColorDark),
+                ),
+                color: Theme.darkThemeData.primaryColor,
+                elevation: 15,
+                onPressed: _topUpDialog,
+              ),
             ),
           ],
         ),
-        SizedBox(height: 20),
-        Row(
-          children: <Widget>[
-            SizedBox(width: 40),
-            Icon(Icons.phone_android),
-            SizedBox(width: 20),
-            Flexible(
-              child: Text(_phone, style: TextStyle(fontSize: 18)),
-            ),
-          ],
-        ),
-        SizedBox(height: 100),
-        Padding(
-          padding: const EdgeInsets.only(left: 100, right: 100),
-          child: MaterialButton(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5.0)),
-            height: 50,
-            child: Text(
-              'Top Up Credit',
-              style: new TextStyle(
-                  fontSize: 20.0, color: Theme.darkThemeData.primaryColorDark),
-            ),
-            color: Theme.darkThemeData.primaryColor,
-            elevation: 15,
-            onPressed: _topUpDialog,
-          ),
-        ),
-      ],
+      ),
     );
   }
 

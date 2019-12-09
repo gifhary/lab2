@@ -30,8 +30,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 Expanded(
                   child: WebView(
                     initialUrl:
-                    //Abdullah's url
-                        'https://sharpns.net/mybarber3/php/payment/payment.php?email=' +
+                        'http://pickupandlaundry.com/my_pickup/gifhary/payment.php?email=' +
                             widget.user.email +
                             '&mobile=' +
                             widget.user.phone +
@@ -52,7 +51,7 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomePage()),
     );
