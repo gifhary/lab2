@@ -16,19 +16,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
-void main() {
-  runApp(ProfilePage(
-    navigatorObservers: [routeObserver],
-  ));
-}
+void main() => runApp(ProfilePage());
 
 String _value;
 
 class ProfilePage extends StatefulWidget {
   final User user;
+  final Function(String credit) notifyParent;
 
-  ProfilePage(
-      {Key key, this.user, List<RouteObserver<PageRoute>> navigatorObservers});
+  ProfilePage({Key key, this.user, this.notifyParent});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -277,6 +273,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             setState(() {
               _credit = userData['credit'];
+              widget.notifyParent(_credit);
             });
           }
         }).catchError((err) {

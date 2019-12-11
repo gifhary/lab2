@@ -23,6 +23,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   static const String _themePreferenceKey = 'isDark';
   bool _isSwitched = false;
+  User updateAbleUser;
 
   String _userName = "You are not logged in";
   String _email = "";
@@ -42,6 +43,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    updateAbleUser = widget.user;
 
     _loadThemePref();
     _updatePages();
@@ -49,14 +51,12 @@ class _HomePageState extends State<HomePage> {
     _loadPickupDoneCount();
 
     if (widget.user != null) {
-      _email = widget.user.email;
-      _userName = widget.user.name;
+      _email = updateAbleUser.email;
+      _userName = updateAbleUser.name;
       _hasLoggedIn = true;
       _lastNaviagion = "Log out";
       _avatarUrl =
           "http://pickupandlaundry.com/my_pickup/gifhary/profile/$_email.jpg";
-
-      _updatePages();
     }
   }
 
@@ -167,10 +167,16 @@ class _HomePageState extends State<HomePage> {
 
   void _updatePages() {
     pages = [
-      new MyJobPage(user: widget.user, notifyParent: _loadPickupCount),
-      new JobDonePage(user: widget.user, notifyParent: _loadPickupDoneCount),
-      new ProfilePage(user: widget.user),
+      new MyJobPage(user: updateAbleUser, notifyParent: _loadPickupCount),
+      new JobDonePage(user: updateAbleUser, notifyParent: _loadPickupDoneCount),
+      new ProfilePage(user: updateAbleUser, notifyParent: _updateUser),
     ];
+  }
+
+  void _updateUser(String credit){
+    setState(() {
+      updateAbleUser.credit = credit;
+    });
   }
 
   _onSelectItem(int index) {
