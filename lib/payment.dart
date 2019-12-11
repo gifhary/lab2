@@ -3,8 +3,6 @@ import 'package:my_pickup/user.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter/material.dart';
 
-import 'home.dart';
-
 class PaymentPage extends StatefulWidget {
   final User user;
   final String orderid, val;
@@ -51,10 +49,7 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage()),
-    );
+   Navigator.pop(context, "payment");
     return Future.value(false);
   }
 }

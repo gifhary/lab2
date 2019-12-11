@@ -12,15 +12,23 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:random_string/random_string.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(ProfilePage());
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
+void main() {
+  runApp(ProfilePage(
+    navigatorObservers: [routeObserver],
+  ));
+}
 
 String _value;
 
 class ProfilePage extends StatefulWidget {
   final User user;
 
-  ProfilePage({Key key, this.user});
+  ProfilePage(
+      {Key key, this.user, List<RouteObserver<PageRoute>> navigatorObservers});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -30,8 +38,8 @@ class _ProfilePageState extends State<ProfilePage> {
   String _profilePath = 'asset/img/profile.png';
   String _avatarUrl = "";
 
-  String _email = "";
   String _username = "";
+  String _email = "";
   String _phone = "";
   String _credit = "0";
 
@@ -40,8 +48,8 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
 
     if (widget.user != null) {
-      _email = widget.user.email;
       _username = widget.user.name;
+      _email = widget.user.email;
       _phone = widget.user.phone;
       _credit = widget.user.credit;
 
@@ -179,13 +187,20 @@ class _ProfilePageState extends State<ProfilePage> {
                 String formatted =
                     formatter.format(now) + randomAlphaNumeric(10);
                 print(formatted);
-                Navigator.push(
+
+                String result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => PaymentPage(
                             user: widget.user,
                             orderid: formatted,
                             val: _value)));
+
+                setState(() {
+                  if (result == "payment") {
+                    _updateCredit();
+                  }
+                });
               },
             ),
           ],
@@ -244,6 +259,40 @@ class _ProfilePageState extends State<ProfilePage> {
       //Avoid crash if user cancel picking image
       _updateImage(_galleryImage);
     }
+  }
+
+  void _updateCredit() {
+    String urlLogin = 'http://pickupandlaundry.com/my_pickup/gifhary/login.php';
+
+    _checkPref().then((onValue) {
+      if (onValue[0] != null && onValue[1] != null) {
+        http.post(urlLogin, body: {
+          "email": onValue[0],
+          "password": onValue[1],
+        }).then((res) {
+          print("status code : " + res.statusCode.toString());
+          if (res.body != "failed") {
+            var userData = json.decode(res.body);
+            print("user data : " + userData.toString());
+
+            setState(() {
+              _credit = userData['credit'];
+            });
+          }
+        }).catchError((err) {
+          print(err);
+        });
+      }
+    });
+  }
+
+  Future<List> _checkPref() async {
+    print('check preferences');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String email = prefs.getString('email');
+    String password = prefs.getString('password');
+
+    return [email, password];
   }
 
   void _updateImage(File file) {

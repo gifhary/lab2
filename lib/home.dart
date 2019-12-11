@@ -10,14 +10,11 @@ import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:toast/toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-String myPickupCount = "";
-String pickupDoneCount = "";
-
 void main() => runApp(HomePage());
 
 class HomePage extends StatefulWidget {
   final User user;
-  const HomePage({Key key, this.user}) : super(key: key);
+  HomePage({Key key, this.user});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -39,23 +36,17 @@ class _HomePageState extends State<HomePage> {
 
   int pageIndex = 0;
 
+  String myPickupCount = "";
+  String pickupDoneCount = "";
+
   @override
   void initState() {
     super.initState();
 
     _loadThemePref();
     _updatePages();
-
-    _loadStringPrefs("myPickupCount").then((count) {
-      if (count != null) {
-        myPickupCount = count;
-      }
-    });
-    _loadStringPrefs("pickupDoneCount").then((count) {
-      if (count != null) {
-        pickupDoneCount = count;
-      }
-    });
+    _loadPickupCount();
+    _loadPickupDoneCount();
 
     if (widget.user != null) {
       _email = widget.user.email;
@@ -176,9 +167,9 @@ class _HomePageState extends State<HomePage> {
 
   void _updatePages() {
     pages = [
-      MyJobPage(user: widget.user),
-      JobDonePage(user: widget.user),
-      ProfilePage(user: widget.user),
+      new MyJobPage(user: widget.user, notifyParent: _loadPickupCount),
+      new JobDonePage(user: widget.user, notifyParent: _loadPickupDoneCount),
+      new ProfilePage(user: widget.user),
     ];
   }
 
@@ -206,9 +197,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<String> _loadStringPrefs(String key) async {
+  void _loadPickupCount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(key);
+    setState(() {
+      myPickupCount = prefs.getString("myPickupCount");
+    });
+  }
+
+  void _loadPickupDoneCount() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      pickupDoneCount = prefs.getString("pickupDoneCount");
+    });
   }
 
   void _onThemeChanged(bool value) {

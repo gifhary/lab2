@@ -4,9 +4,9 @@ class Job {
       jobPrice,
       jobDesc,
       jobLocation,
+      jobDestination,
       jobOwner,
       jobDate,
-      jobImage,
       driverEmail;
 
   Job(
@@ -15,8 +15,8 @@ class Job {
       this.jobPrice,
       this.jobDesc,
       this.jobLocation,
+      this.jobDestination,
       this.jobOwner,
       this.jobDate,
-      this.jobImage,
       this.driverEmail});
 }

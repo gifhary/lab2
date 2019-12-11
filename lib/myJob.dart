@@ -18,9 +18,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() => runApp(MyJobPage());
 
 class MyJobPage extends StatefulWidget {
+  final Function() notifyParent;
   final User user;
 
-  MyJobPage({Key key, this.user});
+  MyJobPage({Key key, this.user, this.notifyParent});
 
   @override
   _MyJobPageState createState() => _MyJobPageState();
@@ -59,77 +60,80 @@ class _MyJobPageState extends State<MyJobPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      body: ListView.builder(
-        itemBuilder: (context, position) {
-          return new GestureDetector(
-            onTap: () => _openDetail(job[position]),
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: Card(
-                  elevation: 5,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ClipPath(
-                    clipper: ShapeBorderClipper(
+      body: job.length < 1
+          ? Column(children: <Widget>[Text("Nothing to see here")])
+          : ListView.builder(
+              itemBuilder: (context, position) {
+                return new GestureDetector(
+                  onTap: () => _openDetail(job[position]),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Card(
+                        elevation: 5,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10))),
-                    child: Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            left: BorderSide(
-                              color: Theme.darkThemeData.primaryColor,
-                              width: 10,
-                            ),
-                          ),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Row(
-                          children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(40.0),
-                                child: CachedNetworkImage(
-                                  fit: BoxFit.cover,
-                                  width: 80,
-                                  height: 80,
-                                  placeholder: (context, url) =>
-                                      CircularProgressIndicator(),
-                                  imageUrl: _avatarUrl,
-                                  errorWidget: (context, url, error) =>
-                                      Image.asset(_defaultImg),
+                        child: ClipPath(
+                          clipper: ShapeBorderClipper(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10))),
+                          child: Container(
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  left: BorderSide(
+                                    color: Theme.darkThemeData.primaryColor,
+                                    width: 10,
+                                  ),
                                 ),
                               ),
-                            ),
-                            SizedBox(
-                              width: 15,
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(job[position].jobName,
-                                    style: TextStyle(
-                                        fontSize: 25,
-                                        fontWeight: FontWeight.bold)),
-                                Text("RM " + job[position].jobPrice,
-                                    style: TextStyle(fontSize: 18)),
-                                SizedBox(
-                                  height: 20,
-                                ),
-                                Text(
-                                    timeago.format(
-                                        _jobTime(job[position].jobDate)),
-                                    style: TextStyle(fontSize: 14)),
-                              ],
-                            ),
-                          ],
+                              child: Row(
+                                children: <Widget>[
+                                  Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(40.0),
+                                      child: CachedNetworkImage(
+                                        fit: BoxFit.cover,
+                                        width: 80,
+                                        height: 80,
+                                        placeholder: (context, url) =>
+                                            CircularProgressIndicator(),
+                                        imageUrl: _avatarUrl,
+                                        errorWidget: (context, url, error) =>
+                                            Image.asset(_defaultImg),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 15,
+                                  ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(job[position].jobName,
+                                          style: TextStyle(
+                                              fontSize: 25,
+                                              fontWeight: FontWeight.bold)),
+                                      Text("RM " + job[position].jobPrice,
+                                          style: TextStyle(fontSize: 18)),
+                                      SizedBox(
+                                        height: 20,
+                                      ),
+                                      Text(
+                                          timeago.format(
+                                              _jobTime(job[position].jobDate)),
+                                          style: TextStyle(fontSize: 14)),
+                                    ],
+                                  ),
+                                ],
+                              )),
                         )),
-                  )),
+                  ),
+                );
+              },
+              itemCount: job.length,
             ),
-          );
-        },
-        itemCount: job.length,
-      ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: _addJobDialog,
@@ -231,9 +235,9 @@ class _MyJobPageState extends State<MyJobPage> {
             jobPrice: jobData['job_price'],
             jobDesc: jobData['job_desc'],
             jobLocation: jobData['job_location'],
+            jobDestination: jobData['job_destination'],
             jobOwner: jobData['job_owner'],
             jobDate: jobData['job_date'],
-            jobImage: jobData['job_image'],
             driverEmail: jobData['driver_email']));
       }
       print("first job name : " + job[0].jobName);
@@ -244,6 +248,7 @@ class _MyJobPageState extends State<MyJobPage> {
   void _setStringPrefs(String value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("myPickupCount", value);
+    widget.notifyParent();
   }
 
   static Future<String> _getDeviceId() async {
