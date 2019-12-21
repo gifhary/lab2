@@ -14,6 +14,9 @@ import 'theme/theme.dart' as Theme;
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:place_picker/place_picker.dart';
+import 'package:toast/toast.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 
 void main() => runApp(MyJobPage());
 
@@ -33,9 +36,16 @@ class _MyJobPageState extends State<MyJobPage> {
   String _avatarUrl = "";
   String _email = "";
 
+  final String apiKey = "SECRET KEY";
+
   final TextEditingController _jobNameCon = TextEditingController();
   final TextEditingController _priceCon = TextEditingController();
   final TextEditingController _descCon = TextEditingController();
+  final TextEditingController _pickupCon = TextEditingController();
+  final TextEditingController _destiCon = TextEditingController();
+
+  String _pickupLocation;
+  String _destinationLocation;
 
   @override
   void initState() {
@@ -164,7 +174,7 @@ class _MyJobPageState extends State<MyJobPage> {
                     controller: _jobNameCon,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Job Name',
+                      labelText: 'Job name',
                       icon: Icon(Icons.directions_car),
                     )),
                 TextField(
@@ -181,20 +191,35 @@ class _MyJobPageState extends State<MyJobPage> {
                       labelText: 'Description',
                       icon: Icon(Icons.description),
                     )),
-                //TODO add location picker for create new job
+                TextField(
+                    onTap: _setPickupPoint,
+                    focusNode: AlwaysDisabledFocusNode(),
+                    controller: _pickupCon,
+                    keyboardType: TextInputType.text,
+                    decoration: InputDecoration(
+                      labelText: 'Pickup point',
+                      icon: Icon(Icons.location_searching),
+                    )),
+                TextField(
+                    onTap: _setDestination,
+                    focusNode: AlwaysDisabledFocusNode(),
+                    controller: _destiCon,
+                    keyboardType: TextInputType.text,
+                    decoration: InputDecoration(
+                      labelText: "I'm going to...",
+                      icon: Icon(Icons.location_on),
+                    )),
               ],
             ),
           ),
           actions: <Widget>[
             FlatButton(
               child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: _cancel,
             ),
             FlatButton(
               child: Text('OK'),
-              onPressed: _uploadJob,
+              onPressed: _prepareJob,
             ),
           ],
         );
@@ -202,9 +227,98 @@ class _MyJobPageState extends State<MyJobPage> {
     );
   }
 
-  void _uploadJob() {
+  void _prepareJob() async {
+    String jobName = _jobNameCon.text;
+    String price = _priceCon.text;
+    String description = _descCon.text;
+    String location = _pickupLocation;
+    String destination = _destinationLocation;
+
+    if (jobName.isEmpty ||
+        price.isEmpty ||
+        location.isEmpty ||
+        destination.isEmpty) {
+      Toast.show("Please complete the field", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    } else {
+      if (widget.user != null) {
+        _uploadJob(widget.user.email, jobName, price, description, location,
+            destination);
+      } else {
+        _getDeviceId().then((deviceId) {
+          _uploadJob(
+              deviceId, jobName, price, description, location, destination);
+        });
+      }
+    }
+  }
+
+  void _uploadJob(
+      String email, jobName, price, description, location, destination) {
+    String url = 'http://pickupandlaundry.com/my_pickup/gifhary/upload_job.php';
+
+    ProgressDialog pr = new ProgressDialog(context,
+        type: ProgressDialogType.Normal, isDismissible: false);
+    pr.style(message: "Requesting pickup");
+    pr.show();
+
+    http.post(url, body: {
+      "job_name": jobName,
+      "job_price": price,
+      "job_desc": description,
+      "job_location": location,
+      "job_destination": destination,
+      "email": email,
+    }).then((res) {
+      print(res.statusCode);
+      Toast.show(res.body, context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      pr.dismiss();
+
+      if (res.body == "success") {
+        _loadJob(email);
+        _cancel();
+      }
+    }).catchError((err) {
+      print(err);
+    });
+  }
+
+  void _cancel() {
+    setState(() {
+      _jobNameCon.text = "";
+      _priceCon.text = "";
+      _descCon.text = "";
+      _pickupCon.text = "";
+      _destiCon.text = "";
+
+      _pickupLocation = null;
+      _destinationLocation = null;
+    });
+
     Navigator.of(context).pop();
-    //TODO upload job here
+  }
+
+  void _setPickupPoint() async {
+    LocationResult result = await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => PlacePicker(apiKey)));
+    if (result != null) {
+      _pickupCon.text = result.name;
+      _pickupLocation = result.latLng.latitude.toString() +
+          "," +
+          result.latLng.longitude.toString();
+    }
+  }
+
+  void _setDestination() async {
+    LocationResult result = await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => PlacePicker(apiKey)));
+    if (result != null) {
+      _destiCon.text = result.name;
+      _destinationLocation = result.latLng.latitude.toString() +
+          "," +
+          result.latLng.longitude.toString();
+    }
   }
 
   void _loadJob(String email) {
@@ -228,6 +342,8 @@ class _MyJobPageState extends State<MyJobPage> {
 
   void _convertToJob(List list) {
     setState(() {
+      job.clear();
+
       for (var jobData in list) {
         job.add(new Job(
             jobId: jobData['job_id'],
@@ -269,4 +385,9 @@ class _MyJobPageState extends State<MyJobPage> {
 
     return identifier;
   }
+}
+
+class AlwaysDisabledFocusNode extends FocusNode {
+  @override
+  bool get hasFocus => false;
 }
