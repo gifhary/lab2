@@ -88,41 +88,45 @@ class _JobDonePageState extends State<JobDonePage> {
                                 children: <Widget>[
                                   Padding(
                                     padding: const EdgeInsets.all(10),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(40.0),
-                                      child: CachedNetworkImage(
-                                        fit: BoxFit.cover,
-                                        width: 80,
-                                        height: 80,
-                                        placeholder: (context, url) =>
-                                            CircularProgressIndicator(),
-                                        imageUrl: _avatarUrl,
-                                        errorWidget: (context, url, error) =>
-                                            Image.asset(_defaultImg),
+                                    child: CircleAvatar(
+                                      radius: 40,
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(50.0),
+                                        child: CachedNetworkImage(
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              CircularProgressIndicator(),
+                                          imageUrl: _avatarUrl,
+                                          errorWidget: (context, url, error) =>
+                                              Image.asset(_defaultImg),
+                                        ),
                                       ),
                                     ),
                                   ),
                                   SizedBox(
-                                    width: 15,
+                                    width: 10,
                                   ),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(job[position].jobName,
-                                          style: TextStyle(
-                                              fontSize: 25,
-                                              fontWeight: FontWeight.bold)),
-                                      Text("RM " + job[position].jobPrice,
-                                          style: TextStyle(fontSize: 18)),
-                                      SizedBox(
-                                        height: 20,
-                                      ),
-                                      Text(
-                                          timeago.format(
-                                              _jobTime(job[position].jobDate)),
-                                          style: TextStyle(fontSize: 14)),
-                                    ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(job[position].jobName,
+                                            style: TextStyle(
+                                                fontSize: 25,
+                                                fontWeight: FontWeight.bold)),
+                                        Text("RM " + job[position].jobPrice,
+                                            style: TextStyle(fontSize: 18)),
+                                        SizedBox(
+                                          height: 20,
+                                        ),
+                                        Text(
+                                            timeago.format(_jobTime(
+                                                job[position].jobDate)),
+                                            style: TextStyle(fontSize: 14)),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               )),
@@ -169,13 +173,13 @@ class _JobDonePageState extends State<JobDonePage> {
             driverEmail: jobData['driver_email']));
       }
       print("first job name : " + job[0].jobName);
-      _setStringPrefs(job.length.toString());
+      _updateCount();
     });
   }
 
-  void _setStringPrefs(String value) async {
+  void _updateCount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("pickupDoneCount", value);
+    prefs.setString("pickupDoneCount", job.length.toString());
     widget.notifyParent();
   }
 
@@ -184,9 +188,19 @@ class _JobDonePageState extends State<JobDonePage> {
     return dateTime;
   }
 
-  void _openDetail(Job job) {
+  _openDetail(Job job) {
     //open detail page with job object (obvious stuff :D)
-    Navigator.push(context, SlideRightRoute(page: JobDetailPage(job: job)));
+    Navigator.push(
+        context,
+        SlideRightRoute(
+            page: JobDetailPage(job: job, delete: _removeListValue)));
+  }
+
+  void _removeListValue(String id) {
+    setState(() {
+      job.removeWhere((item) => item.jobId == id);
+    });
+    _updateCount();
   }
 
   static Future<String> _getDeviceId() async {

@@ -10,6 +10,9 @@ import 'package:my_pickup/user.dart';
 import 'package:device_info/device_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'home.dart';
+import 'login.dart';
+import 'register.dart';
 import 'theme/theme.dart' as Theme;
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/intl.dart';
@@ -31,14 +34,14 @@ class MyJobPage extends StatefulWidget {
 }
 
 class _MyJobPageState extends State<MyJobPage> {
+  String apiKey = HomePage.apiKey;
+
   List<Job> job = [];
   String _defaultImg = 'asset/img/profile.png';
   String _avatarUrl = "";
   String _email = "";
+  bool _loggedIn = false;
 
-  final String apiKey = "SECRET KEY";
-
-  final TextEditingController _jobNameCon = TextEditingController();
   final TextEditingController _priceCon = TextEditingController();
   final TextEditingController _descCon = TextEditingController();
   final TextEditingController _pickupCon = TextEditingController();
@@ -52,6 +55,7 @@ class _MyJobPageState extends State<MyJobPage> {
     super.initState();
 
     if (widget.user != null) {
+      _loggedIn = true;
       //if user logged in then load job using user email
       print("Load job with email : " + widget.user.email);
       _loadJob(widget.user.email);
@@ -100,41 +104,45 @@ class _MyJobPageState extends State<MyJobPage> {
                                 children: <Widget>[
                                   Padding(
                                     padding: const EdgeInsets.all(10),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(40.0),
-                                      child: CachedNetworkImage(
-                                        fit: BoxFit.cover,
-                                        width: 80,
-                                        height: 80,
-                                        placeholder: (context, url) =>
-                                            CircularProgressIndicator(),
-                                        imageUrl: _avatarUrl,
-                                        errorWidget: (context, url, error) =>
-                                            Image.asset(_defaultImg),
+                                    child: CircleAvatar(
+                                      radius: 40,
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(50.0),
+                                        child: CachedNetworkImage(
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              CircularProgressIndicator(),
+                                          imageUrl: _avatarUrl,
+                                          errorWidget: (context, url, error) =>
+                                              Image.asset(_defaultImg),
+                                        ),
                                       ),
                                     ),
                                   ),
                                   SizedBox(
-                                    width: 15,
+                                    width: 10,
                                   ),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(job[position].jobName,
-                                          style: TextStyle(
-                                              fontSize: 25,
-                                              fontWeight: FontWeight.bold)),
-                                      Text("RM " + job[position].jobPrice,
-                                          style: TextStyle(fontSize: 18)),
-                                      SizedBox(
-                                        height: 20,
-                                      ),
-                                      Text(
-                                          timeago.format(
-                                              _jobTime(job[position].jobDate)),
-                                          style: TextStyle(fontSize: 14)),
-                                    ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(job[position].jobName,
+                                            style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold)),
+                                        Text("RM " + job[position].jobPrice,
+                                            style: TextStyle(fontSize: 15)),
+                                        SizedBox(
+                                          height: 20,
+                                        ),
+                                        Text(
+                                            timeago.format(_jobTime(
+                                                job[position].jobDate)),
+                                            style: TextStyle(fontSize: 12)),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               )),
@@ -146,7 +154,7 @@ class _MyJobPageState extends State<MyJobPage> {
             ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: _addJobDialog,
+        onPressed: _checkJobTotal,
       ),
     );
   }
@@ -158,7 +166,85 @@ class _MyJobPageState extends State<MyJobPage> {
 
   _openDetail(Job job) {
     //open detail page with job object (obvious stuff :D)
-    Navigator.push(context, SlideRightRoute(page: JobDetailPage(job: job)));
+    Navigator.push(
+        context,
+        SlideRightRoute(
+            page: JobDetailPage(job: job, delete: _removeListValue)));
+  }
+
+  void _removeListValue(String id) {
+    setState(() {
+      job.removeWhere((item) => item.jobId == id);
+    });
+    _updateCount();
+  }
+
+  void _checkJobTotal() {
+    if (_loggedIn) {
+      //straight to request pickup form if logged in
+      _addJobDialog();
+    } else {
+      //limit job request once at a time if not logged in
+      if (job.length > 0) {
+        _exeedJobLimit();
+      } else {
+        _addJobDialog();
+      }
+    }
+  }
+
+  Future<void> _exeedJobLimit() {
+    return showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Uh-Oh!'),
+          content: SingleChildScrollView(
+              child: Column(
+            children: <Widget>[
+              Text("You can only make one request before driver accept it\n"),
+              Text("Or REGISTER an account for unlimited request."),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 10, 0, 20),
+                child: MaterialButton(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5.0)),
+                  minWidth: 300,
+                  height: 50,
+                  child: Text('Register',
+                      style: new TextStyle(
+                          fontSize: 20.0,
+                          color: Theme.darkThemeData.primaryColorDark)),
+                  color: Theme.darkThemeData.primaryColor,
+                  elevation: 15,
+                  onPressed: _onRegister,
+                ),
+              ),
+              Row(
+                children: <Widget>[
+                  Text("Have an account? "),
+                  GestureDetector(
+                      onTap: _onLogin,
+                      child: Text("Login",
+                          style: TextStyle(
+                              color: Theme.darkThemeData.primaryColor)))
+                ],
+              )
+            ],
+          )),
+        );
+      },
+    );
+  }
+
+  void _onLogin() {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => LoginPage()));
+  }
+
+  void _onRegister() {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => RegisterPage()));
   }
 
   Future<void> _addJobDialog() {
@@ -171,13 +257,6 @@ class _MyJobPageState extends State<MyJobPage> {
             child: Column(
               children: <Widget>[
                 TextField(
-                    controller: _jobNameCon,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Job name',
-                      icon: Icon(Icons.directions_car),
-                    )),
-                TextField(
                     controller: _priceCon,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
@@ -186,10 +265,13 @@ class _MyJobPageState extends State<MyJobPage> {
                     )),
                 TextField(
                     controller: _descCon,
-                    keyboardType: TextInputType.text,
+                    //phone number field if user has not logged in
+                    keyboardType:
+                        _loggedIn ? TextInputType.text : TextInputType.phone,
                     decoration: InputDecoration(
-                      labelText: 'Description',
-                      icon: Icon(Icons.description),
+                      //phone number field if user has not logged in
+                      labelText: _loggedIn ? 'Description' : 'Phone',
+                      icon: Icon(_loggedIn ? Icons.description : Icons.phone),
                     )),
                 TextField(
                     onTap: _setPickupPoint,
@@ -228,33 +310,35 @@ class _MyJobPageState extends State<MyJobPage> {
   }
 
   void _prepareJob() async {
-    String jobName = _jobNameCon.text;
+    String jobName = "Ride to " + _destiCon.text;
     String price = _priceCon.text;
     String description = _descCon.text;
+    String locNames = _pickupCon.text+","+_destiCon.text;
     String location = _pickupLocation;
     String destination = _destinationLocation;
 
     if (jobName.isEmpty ||
         price.isEmpty ||
+        description.isEmpty ||
         location.isEmpty ||
         destination.isEmpty) {
       Toast.show("Please complete the field", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     } else {
       if (widget.user != null) {
-        _uploadJob(widget.user.email, jobName, price, description, location,
+        _uploadJob(widget.user.email, jobName, price, description, locNames, location,
             destination);
       } else {
         _getDeviceId().then((deviceId) {
           _uploadJob(
-              deviceId, jobName, price, description, location, destination);
+              deviceId, jobName, price, description, locNames, location, destination);
         });
       }
     }
   }
 
   void _uploadJob(
-      String email, jobName, price, description, location, destination) {
+      String email, jobName, price, description, locNames, location, destination) {
     String url = 'http://pickupandlaundry.com/my_pickup/gifhary/upload_job.php';
 
     ProgressDialog pr = new ProgressDialog(context,
@@ -266,6 +350,7 @@ class _MyJobPageState extends State<MyJobPage> {
       "job_name": jobName,
       "job_price": price,
       "job_desc": description,
+      "job_loc_names": locNames,
       "job_location": location,
       "job_destination": destination,
       "email": email,
@@ -286,7 +371,6 @@ class _MyJobPageState extends State<MyJobPage> {
 
   void _cancel() {
     setState(() {
-      _jobNameCon.text = "";
       _priceCon.text = "";
       _descCon.text = "";
       _pickupCon.text = "";
@@ -350,6 +434,7 @@ class _MyJobPageState extends State<MyJobPage> {
             jobName: jobData['job_name'],
             jobPrice: jobData['job_price'],
             jobDesc: jobData['job_desc'],
+            jobLocNames: jobData['job_loc_names'],
             jobLocation: jobData['job_location'],
             jobDestination: jobData['job_destination'],
             jobOwner: jobData['job_owner'],
@@ -357,13 +442,13 @@ class _MyJobPageState extends State<MyJobPage> {
             driverEmail: jobData['driver_email']));
       }
       print("first job name : " + job[0].jobName);
-      _setStringPrefs(job.length.toString());
+      _updateCount();
     });
   }
 
-  void _setStringPrefs(String value) async {
+  void _updateCount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("myPickupCount", value);
+    prefs.setString("myPickupCount", job.length.toString());
     widget.notifyParent();
   }
 

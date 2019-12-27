@@ -13,6 +13,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 void main() => runApp(HomePage());
 
 class HomePage extends StatefulWidget {
+  static String apiKey = "NAH, I DONT THINK SO";
+
   final User user;
   HomePage({Key key, this.user});
 
@@ -78,8 +80,6 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(50.0),
                   child: CachedNetworkImage(
                     fit: BoxFit.cover,
-                    width: 100,
-                    height: 100,
                     placeholder: (context, url) => CircularProgressIndicator(),
                     imageUrl: _avatarUrl,
                     errorWidget: (context, url, error) =>
@@ -173,7 +173,7 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
-  void _updateUser(String credit){
+  void _updateUser(String credit) {
     setState(() {
       updateAbleUser.credit = credit;
     });
@@ -205,15 +205,21 @@ class _HomePageState extends State<HomePage> {
 
   void _loadPickupCount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    String count = prefs.getString("myPickupCount");
     setState(() {
-      myPickupCount = prefs.getString("myPickupCount");
+      if (count != null) {
+        myPickupCount = count;
+      }
     });
   }
 
   void _loadPickupDoneCount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    String count = prefs.getString("pickupDoneCount");
     setState(() {
-      pickupDoneCount = prefs.getString("pickupDoneCount");
+      if (count != null) {
+        pickupDoneCount = count;
+      }
     });
   }
 

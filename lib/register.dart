@@ -78,8 +78,8 @@ class RegisterWidgetState extends State<RegisterWidget> {
         GestureDetector(
             onTap: () => mainBottomSheet(context),
             child: Container(
-              width: 200,
-              height: 200,
+              width: 150,
+              height: 150,
               decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   image: DecorationImage(
