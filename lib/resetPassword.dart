@@ -29,11 +29,20 @@ class ResetPassword extends StatefulWidget {
 
 class _HomePageState extends State<ResetPassword> {
   static const String _themePreferenceKey = 'isDark';
+  FocusNode focusNode;
 
   @override
   void initState() {
-    _loadResetEmail();
     super.initState();
+
+    focusNode = FocusNode();
+    _loadResetEmail();
+  }
+
+  @override
+  void dispose() {
+    focusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,7 +55,6 @@ class _HomePageState extends State<ResetPassword> {
           child: new Container(
             padding: EdgeInsets.all(30),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 SizedBox(
                   height: 20,
@@ -63,6 +71,7 @@ class _HomePageState extends State<ResetPassword> {
                   height: 20,
                 ),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     SizedBox(
                       width: 25,
@@ -70,7 +79,7 @@ class _HomePageState extends State<ResetPassword> {
                     MaterialButton(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5.0)),
-                      minWidth: 150,
+                      minWidth: 100,
                       height: 50,
                       child: Text(
                         'Cancel',
@@ -88,7 +97,7 @@ class _HomePageState extends State<ResetPassword> {
                     MaterialButton(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5.0)),
-                      minWidth: 150,
+                      minWidth: 100,
                       height: 50,
                       child: Text(
                         'OK',
@@ -106,6 +115,7 @@ class _HomePageState extends State<ResetPassword> {
                   height: 30,
                 ),
                 TextField(
+                    focusNode: focusNode,
                     enabled: _isCodeMatch,
                     controller: _newPasswordController,
                     keyboardType: TextInputType.text,
@@ -182,7 +192,7 @@ class _HomePageState extends State<ResetPassword> {
             _securityCodeController.text = "";
             _newPasswordController.text = "";
             _newPasswordController2.text = "";
-            
+
             _removePrefsExceptTheme();
 
             Navigator.push(
@@ -215,6 +225,11 @@ class _HomePageState extends State<ResetPassword> {
   void _cancel() async {
     _removePrefsExceptTheme();
 
+    _securityCodeController.text = "";
+    _newPasswordController.text = "";
+    _newPasswordController2.text = "";
+    _isCodeMatch = false;
+
     Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -227,11 +242,16 @@ class _HomePageState extends State<ResetPassword> {
 
     _loadCode().then((onValue) {
       if (_secureCode == onValue) {
-        _isCodeMatch = true;
+        setState(() {
+          _isCodeMatch = true;
+        });
 
         Toast.show('Correct Code', context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-        setState(() {});
+        //500 milis delay, give time to enable password text field
+        Future.delayed(const Duration(milliseconds: 500), () {
+          FocusScope.of(context).requestFocus(focusNode);
+        });
       } else {
         _isCodeMatch = false;
         Toast.show('Wrong Code', context,
