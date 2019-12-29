@@ -29,7 +29,7 @@ class JobDonePage extends StatefulWidget {
 }
 
 class _JobDonePageState extends State<JobDonePage> {
-  List<Job> job = [];
+  List<Job> jobs = [];
   String _defaultImg = 'asset/img/profile.png';
   String _avatarUrl = "";
   String _email = "";
@@ -57,13 +57,21 @@ class _JobDonePageState extends State<JobDonePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      body: job.length < 1
-          ? Column(children: <Widget>[Text("Nothing to see here")])
+      body: jobs.length < 1
+          ? ListView(
+              children: <Widget>[
+                ListTile(
+                  title: Column(
+                    children: <Widget>[Text("Nothing to see here")],
+                  ),
+                )
+              ],
+            )
           : ListView.builder(
-              itemCount: job.length,
+              itemCount: jobs.length,
               itemBuilder: (context, position) {
                 return new GestureDetector(
-                  onTap: () => _openDetail(job[position]),
+                  onTap: () => _openDetail(jobs[position]),
                   child: Padding(
                     padding: const EdgeInsets.all(4),
                     child: Card(
@@ -112,18 +120,20 @@ class _JobDonePageState extends State<JobDonePage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: <Widget>[
-                                        Text(job[position].jobName,
+                                        Text(jobs[position].jobName,
                                             style: TextStyle(
                                                 fontSize: 25,
                                                 fontWeight: FontWeight.bold)),
-                                        Text("RM " + job[position].jobPrice,
+                                        Text(
+                                            "Fare: RM " +
+                                                jobs[position].jobPrice,
                                             style: TextStyle(fontSize: 18)),
                                         SizedBox(
                                           height: 20,
                                         ),
                                         Text(
                                             timeago.format(_jobTime(
-                                                job[position].jobDate)),
+                                                jobs[position].jobDate)),
                                             style: TextStyle(fontSize: 14)),
                                       ],
                                     ),
@@ -161,25 +171,27 @@ class _JobDonePageState extends State<JobDonePage> {
   void _convertToJob(List list) {
     setState(() {
       for (var jobData in list) {
-        job.add(new Job(
+        jobs.add(new Job(
             jobId: jobData['job_id'],
             jobName: jobData['job_name'],
             jobPrice: jobData['job_price'],
             jobDesc: jobData['job_desc'],
+            jobLocNames: jobData['job_loc_names'],
             jobLocation: jobData['job_location'],
             jobDestination: jobData['job_destination'],
             jobOwner: jobData['job_owner'],
             jobDate: jobData['job_date'],
-            driverEmail: jobData['driver_email']));
+            driverEmail: jobData['driver_email'],
+            jobRating: double.parse(jobData['job_rating'])));
       }
-      print("first job name : " + job[0].jobName);
+      print("first job name : " + jobs[0].jobName);
       _updateCount();
     });
   }
 
   void _updateCount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("pickupDoneCount", job.length.toString());
+    prefs.setString("pickupDoneCount", jobs.length.toString());
     widget.notifyParent();
   }
 
@@ -193,12 +205,17 @@ class _JobDonePageState extends State<JobDonePage> {
     Navigator.push(
         context,
         SlideRightRoute(
-            page: JobDetailPage(job: job, delete: _removeListValue)));
+            page: JobDetailPage(job: job, delete: _removeListValue, update: _updateJobRating)));
+  }
+
+  void _updateJobRating(String id, double rating){
+    int index = jobs.indexWhere((job) => job.jobId == id);
+    jobs[index].jobRating = rating;
   }
 
   void _removeListValue(String id) {
     setState(() {
-      job.removeWhere((item) => item.jobId == id);
+      jobs.removeWhere((item) => item.jobId == id);
     });
     _updateCount();
   }

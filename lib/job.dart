@@ -9,6 +9,7 @@ class Job {
       jobOwner,
       jobDate,
       driverEmail;
+  double jobRating;
 
   Job(
       {this.jobId,
@@ -20,5 +21,6 @@ class Job {
       this.jobDestination,
       this.jobOwner,
       this.jobDate,
-      this.driverEmail});
+      this.driverEmail,
+      this.jobRating});
 }

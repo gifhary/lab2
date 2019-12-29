@@ -75,7 +75,15 @@ class _MyJobPageState extends State<MyJobPage> {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       body: job.length < 1
-          ? Column(children: <Widget>[Text("Nothing to see here")])
+          ? ListView(
+              children: <Widget>[
+                ListTile(
+                  title: Column(
+                    children: <Widget>[Text("Nothing to see here")],
+                  ),
+                )
+              ],
+            )
           : ListView.builder(
               itemBuilder: (context, position) {
                 return new GestureDetector(
@@ -132,7 +140,7 @@ class _MyJobPageState extends State<MyJobPage> {
                                             style: TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold)),
-                                        Text("RM " + job[position].jobPrice,
+                                        Text("Fare: RM " + job[position].jobPrice,
                                             style: TextStyle(fontSize: 15)),
                                         SizedBox(
                                           height: 20,
@@ -309,7 +317,7 @@ class _MyJobPageState extends State<MyJobPage> {
     );
   }
 
-  void _prepareJob() async {
+  void _prepareJob() {
     String jobName = "Ride to " + _destiCon.text;
     String price = _priceCon.text;
     String description = _descCon.text;
