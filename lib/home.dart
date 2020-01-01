@@ -13,7 +13,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 void main() => runApp(HomePage());
 
 class HomePage extends StatefulWidget {
-  static String apiKey = "NOT A CHANCE";
+  static String apiKey = "API KEY HERE";
 
   final User user;
   HomePage({Key key, this.user});
@@ -36,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   String _lastNaviagion = "Log in";
 
   List<Widget> pages;
+  List<String> pageNames = ["MyPickup", "Pickup Done", "Profile"];
 
   int pageIndex = 0;
 
@@ -66,7 +67,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("My Pickup"),
+        title: Text(pageNames[pageIndex]),
       ),
       body: pages[pageIndex],
       drawer: Drawer(

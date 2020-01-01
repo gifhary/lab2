@@ -1,0 +1,2 @@
+[09-Dec-2019 23:03:36 Asia/Kuala_Lumpur] PHP Notice:  Undefined index: url in /home2/pickupan/public_html/my_pickup/gifhary/test.php on line 28
+[09-Dec-2019 23:11:05 Asia/Kuala_Lumpur] PHP Warning:  Illegal string offset 'url' in /home2/pickupan/public_html/my_pickup/gifhary/test.php on line 27

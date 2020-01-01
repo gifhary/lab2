@@ -69,7 +69,9 @@ class _ProgressIndicatorState extends State<ProgressIndicator>
             if (onValue[0] != null && onValue[1] != null) {
               _getUser(onValue[0], onValue[1]);
             } else {
-              _moveToHome(null);
+              Future.delayed(const Duration(milliseconds: 2000), () {
+                _moveToHome(null);
+              });
             }
           });
         });
