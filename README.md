@@ -1,9 +1,14 @@
-# my_pickup
+## my_pickup
 
 Flutter project for Mobile Development course. A simple Grab-like shared transportation
 mobile app. This project is a requirement to complete Mobile Development course.
 
+In order to run this application, you need to get Google Map SDK API key with Geocoding, Places, Maps SDK for Android, and Maps SDK for iOS enabled.
 
+The API key will be used in:
+- ios/Runner/AppDelegate.swift
+- android/app/src/main/AndroidManifest.xml
+- lib/home.dart
 
 ## Getting Started
 
